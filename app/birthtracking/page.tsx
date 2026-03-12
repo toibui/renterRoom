@@ -12,55 +12,48 @@ type BirthTracking = {
   hospitalName?: string;
   birthType?: string;
   babiesCount: number;
-  barcodeStatus: BarcodeStatus;
+  barcodeStatus?: BarcodeStatus;
   status: string;
-  contract: {
+
+  contract?: {
     id: string;
-    customer: {
+    customer?: {
       id: string;
-      fullName: string;
-      phone: string;
+      fullName?: string;
+      phone?: string;
     };
-  };
+  } | null;
 };
 
 const barcodeText: Record<BarcodeStatus, string> = {
   NOT_DUE: 'Chưa đến ngày',
   NOT_ATTACHED: 'Chưa dán',
-  ATTACHED: 'Đã dán'
+  ATTACHED: 'Đã dán',
 };
 
 /**
  * Tính tuần thai
  */
 function calculateGestationalWeek(edd?: string) {
-
   if (!edd) return 0;
 
   const eddDate = new Date(edd);
   const today = new Date();
 
   const diffDays = Math.floor(
-    (eddDate.getTime() - today.getTime()) /
-    (1000 * 60 * 60 * 24)
+    (eddDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
 
   return 40 - Math.floor(diffDays / 7);
 }
 
 /**
- * Barcode logic
- *
- * 1. Nếu DB = ATTACHED → giữ nguyên
- * 2. Nếu DB ≠ ATTACHED → tính theo tuần thai
- * 3. >=36 tuần → NOT_ATTACHED
- * 4. <36 tuần → NOT_DUE
+ * Logic barcode
  */
 function calculateBarcodeStatus(
   edd?: string,
   dbStatus?: BarcodeStatus
 ): BarcodeStatus {
-
   if (dbStatus === 'ATTACHED') {
     return 'ATTACHED';
   }
@@ -79,47 +72,39 @@ function calculateBarcodeStatus(
 }
 
 export default function BirthTrackingPage() {
-
   const [births, setBirths] = useState<BirthTracking[]>([]);
   const [loading, setLoading] = useState(true);
   const [barcodeFilter, setBarcodeFilter] = useState('');
 
-  const fetchBirths = () => {
-
+  const fetchBirths = async () => {
     setLoading(true);
 
-    let url = '/api/births';
+    try {
+      let url = '/api/births';
 
-    if (barcodeFilter && barcodeFilter !== 'UPCOMING') {
-      url += `?barcodeStatus=${barcodeFilter}`;
+      if (barcodeFilter && barcodeFilter !== 'UPCOMING') {
+        url += `?barcodeStatus=${barcodeFilter}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      let filtered = data;
+
+      // Filter sắp sinh
+      if (barcodeFilter === 'UPCOMING') {
+        filtered = data.filter((b: BirthTracking) => {
+          const week = calculateGestationalWeek(b.edd);
+          return week >= 38 && !b.actualBirthAt;
+        });
+      }
+
+      setBirths(filtered);
+    } catch (err) {
+      console.error('Fetch births error', err);
     }
 
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-
-        let filtered = data;
-
-        // Filter sắp sinh
-        if (barcodeFilter === 'UPCOMING') {
-
-          filtered = data.filter((b: BirthTracking) => {
-
-            const week = calculateGestationalWeek(b.edd);
-
-            return (
-              week >= 38 &&
-              !b.actualBirthAt
-            );
-
-          });
-
-        }
-
-        setBirths(filtered);
-        setLoading(false);
-
-      });
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -127,36 +112,31 @@ export default function BirthTrackingPage() {
   }, [barcodeFilter]);
 
   const handleDelete = async (id: string) => {
-
-    if (!confirm('Bạn có chắc muốn xoá?')) return;
+    const ok = confirm('Bạn có chắc muốn xoá?');
+    if (!ok) return;
 
     await fetch(`/api/births/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
     });
 
-    setBirths(prev => prev.filter(b => b.id !== id));
+    setBirths((prev) => prev.filter((b) => b.id !== id));
   };
 
-  const formatDate = (date?: string) =>
-    date ? new Date(date).toLocaleDateString('vi-VN') : '-';
+  const formatDate = (date?: string) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('vi-VN');
+  };
 
   if (loading) {
-    return (
-      <div className="p-4 text-gray-500">
-        Đang tải dữ liệu...
-      </div>
-    );
+    return <div className="p-4 text-gray-500">Đang tải dữ liệu...</div>;
   }
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
 
-        <h1 className="text-2xl font-bold">
-          Birth Tracking
-        </h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">Birth Tracking</h1>
 
         <Link
           href="/birthtracking/new"
@@ -164,49 +144,29 @@ export default function BirthTrackingPage() {
         >
           + New Birth Tracking
         </Link>
-
       </div>
 
       {/* Filter */}
-      <div className="flex gap-3 mb-4">
 
+      <div className="flex gap-3 mb-4">
         <select
           className="border rounded-lg px-3 py-2"
           value={barcodeFilter}
           onChange={(e) => setBarcodeFilter(e.target.value)}
         >
-
-          <option value="">
-            Tất cả Barcode
-          </option>
-
-          <option value="NOT_DUE">
-            Chưa đến ngày
-          </option>
-
-          <option value="NOT_ATTACHED">
-            Chưa dán
-          </option>
-
-          <option value="ATTACHED">
-            Đã dán
-          </option>
-
-          <option value="UPCOMING">
-            Sắp sinh (≥ 38 tuần)
-          </option>
-
+          <option value="">Tất cả Barcode</option>
+          <option value="NOT_DUE">Chưa đến ngày</option>
+          <option value="NOT_ATTACHED">Chưa dán</option>
+          <option value="ATTACHED">Đã dán</option>
+          <option value="UPCOMING">Sắp sinh (≥ 38 tuần)</option>
         </select>
-
       </div>
 
       {/* Table */}
+
       <div className="bg-white shadow rounded-lg overflow-x-auto">
-
         <table className="w-full text-sm">
-
           <thead className="bg-gray-100 text-gray-600">
-
             <tr>
               <th className="p-3 text-left">Customer</th>
               <th className="p-3 text-left">Phone</th>
@@ -218,36 +178,28 @@ export default function BirthTrackingPage() {
               <th className="p-3 text-left">Status</th>
               <th className="p-3 text-center">Actions</th>
             </tr>
-
           </thead>
 
           <tbody>
-
-            {births.map(b => {
-
+            {births.map((b) => {
               const barcodeStatus = calculateBarcodeStatus(
                 b.edd,
                 b.barcodeStatus
               );
 
+              const customer = b.contract?.customer;
+
               return (
-
-                <tr
-                  key={b.id}
-                  className="border-t hover:bg-gray-50"
-                >
-
+                <tr key={b.id} className="border-t hover:bg-gray-50">
                   <td className="p-3 font-medium">
-                    {b.contract.customer.fullName}
+                    {customer?.fullName || '-'}
                   </td>
 
-                  <td className="p-3">
-                    {b.contract.customer.phone}
-                  </td>
+                  <td className="p-3">{customer?.phone || '-'}</td>
 
                   {/* Barcode */}
-                  <td className="p-3 text-center">
 
+                  <td className="p-3 text-center">
                     {barcodeStatus === 'NOT_DUE' && (
                       <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">
                         {barcodeText.NOT_DUE}
@@ -265,31 +217,19 @@ export default function BirthTrackingPage() {
                         {barcodeText.ATTACHED}
                       </span>
                     )}
-
                   </td>
 
-                  <td className="p-3">
-                    {formatDate(b.edd)}
-                  </td>
+                  <td className="p-3">{formatDate(b.edd)}</td>
 
-                  <td className="p-3">
-                    {formatDate(b.actualBirthAt)}
-                  </td>
+                  <td className="p-3">{formatDate(b.actualBirthAt)}</td>
 
-                  <td className="p-3">
-                    {b.hospitalName || '-'}
-                  </td>
+                  <td className="p-3">{b.hospitalName || '-'}</td>
 
-                  <td className="p-3 text-center">
-                    {b.babiesCount}
-                  </td>
+                  <td className="p-3 text-center">{b.babiesCount}</td>
 
-                  <td className="p-3">
-                    {b.status}
-                  </td>
+                  <td className="p-3">{b.status}</td>
 
                   <td className="p-3 text-center space-x-2">
-
                     <Link
                       href={`/birthtracking/${b.id}`}
                       className="text-blue-600 hover:underline"
@@ -303,34 +243,21 @@ export default function BirthTrackingPage() {
                     >
                       Delete
                     </button>
-
                   </td>
-
                 </tr>
               );
             })}
 
             {births.length === 0 && (
-
               <tr>
-
-                <td
-                  colSpan={9}
-                  className="text-center py-6 text-gray-400"
-                >
+                <td colSpan={9} className="text-center py-6 text-gray-400">
                   Chưa có Birth Tracking nào
                 </td>
-
               </tr>
-
             )}
-
           </tbody>
-
         </table>
-
       </div>
-
     </div>
   );
 }
