@@ -9,11 +9,14 @@ type Contract = {
   promote?: number;
   price?: number;
   dateContract: string;
-  createdAt: string;
 
   customer: {
+    id: string;
     fullName: string;
     phone: string;
+    idno?: string;
+    iddate?: string;
+    idplace?: string;
   };
 
   type: {
@@ -25,6 +28,7 @@ type Contract = {
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetch('/api/contracts')
@@ -36,111 +40,168 @@ export default function ContractsPage() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    const confirmDelete = window.confirm('Bạn có chắc muốn xoá hợp đồng này?');
-    if (!confirmDelete) return;
+    if (!window.confirm('Bạn có chắc muốn xoá hợp đồng này?')) return;
 
     await fetch(`/api/contracts/${id}`, { method: 'DELETE' });
-
     setContracts(prev => prev.filter(c => c.id !== id));
   };
 
-  const formatDate = (date: string) =>
-    new Date(date).toLocaleDateString('vi-VN');
+  const formatDate = (date?: string) =>
+    date ? new Date(date).toLocaleDateString('vi-VN') : '-';
 
   const formatMoney = (money?: number) =>
     money ? money.toLocaleString('vi-VN') + ' đ' : '-';
 
-  if (loading) {
+  const filteredContracts = contracts.filter((c) => {
+    const keyword = searchTerm.toLowerCase();
+
     return (
-      <div className="p-10 text-center text-gray-500">
-        Đang tải dữ liệu...
-      </div>
+      c.customer.fullName.toLowerCase().includes(keyword) ||
+      c.customer.phone.includes(keyword) ||
+      c.customer.idno?.includes(keyword) ||
+      c.no?.toLowerCase().includes(keyword)
     );
-  }
+  });
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Danh sách hợp đồng</h1>
+        <h1 className="text-2xl md:text-3xl font-bold">
+          Quản lý hợp đồng
+        </h1>
 
         <Link
           href="/contracts/new"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg"
         >
           + Thêm hợp đồng
         </Link>
       </div>
 
-      {contracts.length === 0 ? (
-        <div className="text-center text-gray-400 py-10">
-          Chưa có hợp đồng nào
+      {/* SEARCH */}
+      <div className="mb-4 flex gap-3 items-center">
+        <input
+          placeholder="Tìm khách hàng, CCCD, SĐT..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border px-4 py-2 rounded-lg w-80"
+        />
+
+        <span className="text-sm text-gray-500">
+          {filteredContracts.length} hợp đồng
+        </span>
+      </div>
+
+      {loading ? (
+        <div className="text-center py-20 text-gray-400">
+          Đang tải...
         </div>
       ) : (
+        <div className="bg-white rounded-xl shadow border overflow-hidden">
 
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[70vh]">
 
             <table className="w-full text-sm">
 
-              <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+              <thead className="bg-gray-50 text-gray-600 text-xs uppercase sticky top-0">
                 <tr>
-                  <th className="p-3 text-left">Khách hàng</th>
-                  <th className="p-3 text-left">Điện thoại</th>
-                  <th className="p-3 text-left">Số hợp đồng</th>
-                  <th className="p-3 text-left">Gói</th>
-                  <th className="p-3 text-left">Giá gốc</th>
-                  <th className="p-3 text-left">Khuyến mại</th>
-                  <th className="p-3 text-left">Thành tiền</th>
-                  <th className="p-3 text-left">Ngày hợp đồng</th>
-                  <th className="p-3 text-center">Hành động</th>
+                  <th className="p-4 text-left">Khách hàng</th>
+                  <th className="p-4 text-left">Số HĐ</th>
+                  <th className="p-4 text-left">Gói</th>
+                  <th className="p-4 text-left">Giá thu</th>
+                  <th className="p-4 text-left">Ngày</th>
+                  <th className="p-4 text-center">Thao tác</th>
                 </tr>
               </thead>
 
               <tbody>
 
-                {contracts.map(c => (
+                {filteredContracts.map((c) => (
 
-                  <tr
-                    key={c.id}
-                    className="border-t hover:bg-gray-50 transition"
-                  >
+                  <tr key={c.id} className="border-t hover:bg-blue-50/50">
 
-                    <td className="p-3 font-medium">
-                      {c.customer.fullName}
+                    {/* CUSTOMER */}
+                    <td className="p-4">
+
+                      <Link href={`/customers/${c.customer.id}`}>
+                        <div className="cursor-pointer">
+
+                          <div className="font-bold text-gray-900">
+                            {c.customer.fullName}
+                          </div>
+
+                          <div className="text-blue-600 text-sm">
+                            {c.customer.phone}
+                          </div>
+
+                          {/* CCCD */}
+                          <div className="text-xs text-gray-500 mt-1">
+                            {c.customer.idno || '-'}
+                          </div>
+
+                          <div className="text-[11px] text-gray-400 italic">
+                            {c.customer.iddate
+                              ? formatDate(c.customer.iddate)
+                              : ''}{' '}
+                            {c.customer.idplace
+                              ? ` tại ${c.customer.idplace}`
+                              : ''}
+                          </div>
+
+                        </div>
+                      </Link>
+
                     </td>
 
-                    <td className="p-3">
-                      {c.customer.phone}
-                    </td>
-
-                    <td className="p-3">
+                    {/* CONTRACT NO */}
+                    <td className="p-4">
                       {c.no || '-'}
                     </td>
 
-                    <td className="p-3">
-                      {c.type.name}
+                    {/* TYPE */}
+                    <td className="p-4">
+                      <span className="bg-indigo-50 text-indigo-600 px-2 py-1 rounded text-xs">
+                        {c.type.name}
+                      </span>
                     </td>
 
-                    <td className="p-3">
-                      {formatMoney(c.type.price)}
+                    {/* PRICE (MAIN) */}
+                    <td className="p-4">
+
+                      <div className="relative group w-fit">
+
+                        <div className="font-semibold text-green-600 cursor-pointer">
+                          {formatMoney(c.price)}
+                        </div>
+
+                        {/* TOOLTIP */}
+                        <div className="absolute hidden group-hover:block bg-white border shadow-lg rounded-lg p-3 text-xs w-48 z-10">
+
+                          <div className="flex justify-between">
+                            <span>Giá gốc:</span>
+                            <span>{formatMoney(c.type.price)}</span>
+                          </div>
+
+                          <div className="flex justify-between text-red-500">
+                            <span>Khuyến mại:</span>
+                            <span>-{formatMoney(c.promote)}</span>
+                          </div>
+
+                        </div>
+
+                      </div>
+
                     </td>
 
-                    <td className="p-3 text-red-500">
-                      {formatMoney(c.promote)}
-                    </td>
-
-                    <td className="p-3 font-semibold text-green-600">
-                      {formatMoney(c.price)}
-                    </td>
-
-                    <td className="p-3">
+                    {/* DATE */}
+                    <td className="p-4">
                       {formatDate(c.dateContract)}
                     </td>
 
-                    <td className="p-3 text-center space-x-3">
+                    {/* ACTION */}
+                    <td className="p-4 text-center space-x-2">
 
                       <Link
                         href={`/contracts/${c.id}`}
@@ -169,7 +230,6 @@ export default function ContractsPage() {
           </div>
 
         </div>
-
       )}
 
     </div>
