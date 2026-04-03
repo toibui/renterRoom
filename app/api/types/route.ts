@@ -27,9 +27,9 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
 
     // Kiểm tra dữ liệu đầu vào
-    if (!data.name || data.price === undefined) {
+    if (!data.name || data.price === undefined|| data.duration === undefined) {
       return NextResponse.json(
-        { error: 'Missing name or price' },
+        { error: 'Missing name, price, or duration' },
         { status: 400 }
       );
     }

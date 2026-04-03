@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 /**
- * GET contract by ID (kèm Customer, BirthTracking và Type)
+ * GET contract by ID (kèm Customer, BirthTracking, Type + Renew)
  */
 export async function GET(req: Request, context: any) {
   const params = await context.params;
@@ -17,7 +17,12 @@ export async function GET(req: Request, context: any) {
       include: {
         customer: true,
         birthTracking: true,
-        type: true
+        type: true,
+
+        // 👇 thêm renew
+        renews: {
+          orderBy: { renewNo: 'asc' }
+        }
       }
     });
 
@@ -52,16 +57,22 @@ export async function PUT(
         customerId: data.customerId,
         typeId: data.typeId,
         no: data.no ?? null,
-        dateContract: data.dateContract ? new Date(data.dateContract) : undefined,
+        dateContract: data.dateContract
+          ? new Date(data.dateContract)
+          : undefined,
 
-        // thêm 2 dòng này
         promote: data.promote ?? null,
         price: data.price ?? null
+
+        // ❗ KHÔNG update renew ở đây
       },
       include: {
         customer: true,
         birthTracking: true,
-        type: true
+        type: true,
+        renews: {
+          orderBy: { renewNo: 'asc' }
+        }
       }
     });
 
@@ -88,8 +99,22 @@ export async function DELETE(req: Request, context: any) {
     return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
   try {
+    // 🔥 check có renew chưa
+    const renewCount = await prisma.renewContract.count({
+      where: { contractId: id }
+    });
+
+    if (renewCount > 0) {
+      return NextResponse.json(
+        { error: 'Không thể xoá contract đã có gia hạn' },
+        { status: 400 }
+      );
+    }
+
     await prisma.contract.delete({ where: { id } });
+
     return NextResponse.json({ message: 'Contract deleted' });
+
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

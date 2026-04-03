@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { set } from 'date-fns/fp';
 
 export default function CreateTypePage() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [price, setPrice] = useState(''); // thêm state price
+  const [duration, setDuration] = useState(''); // thêm state duration
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,7 +21,8 @@ export default function CreateTypePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name, 
-          price: price ? parseFloat(price) : null // convert string -> number
+          price: price ? parseFloat(price) : null, // convert string -> number
+          duration: duration ? parseInt(duration) : null // convert string -> number
         }),
       });
 
@@ -66,6 +69,21 @@ export default function CreateTypePage() {
               onChange={e => setPrice(e.target.value)}
               required
               step="0.01" // nếu muốn decimal
+              className="w-full border rounded-lg px-3 py-2"
+            />
+          </div>
+
+          {/* Số năm */}
+          <div>
+            <label className="block mb-1 font-medium">
+              Số năm *
+            </label>
+            <input
+              type="number"
+              value={duration}
+              onChange={e => setDuration(e.target.value)}
+              required
+              step="1" // nếu muốn number
               className="w-full border rounded-lg px-3 py-2"
             />
           </div>

@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Chuẩn hóa thời gian
     const fromDate = new Date(from)
     fromDate.setHours(0, 0, 0, 0)
 
@@ -28,55 +27,46 @@ export async function GET(req: NextRequest) {
       totalUniqueConsultedCustomers,
       totalContracts,
       totalSamples,
-      revenueResult
+
+      // 👇 NEW
+      contractRevenue,
+      renewRevenue,
+      renewCount
     ] = await Promise.all([
 
-      // 1️⃣ Tổng khách hàng tạo mới
+      // 1️⃣ Khách hàng
       prisma.customer.count({
         where: {
-          createdAt: {
-            gte: fromDate,
-            lte: toDate
-          }
+          createdAt: { gte: fromDate, lte: toDate }
         }
       }),
 
-      // 2️⃣ Tổng số cuộc tư vấn
+      // 2️⃣ Tư vấn
       prisma.consulting.count({
         where: {
-          createdAt: {
-            gte: fromDate,
-            lte: toDate
-          }
+          createdAt: { gte: fromDate, lte: toDate }
         }
       }),
 
-      // 3️⃣ Số khách hàng được tư vấn (unique customerId)
+      // 3️⃣ Unique consulted
       (async () => {
         const grouped = await prisma.consulting.groupBy({
           by: ["customerId"],
           where: {
-            createdAt: {
-              gte: fromDate,
-              lte: toDate
-            }
+            createdAt: { gte: fromDate, lte: toDate }
           }
         })
-
         return grouped.length
       })(),
 
-      // 4️⃣ Tổng hợp đồng được ký
+      // 4️⃣ Contract mới
       prisma.contract.count({
         where: {
-          dateContract: {
-            gte: fromDate,
-            lte: toDate
-          }
+          dateContract: { gte: fromDate, lte: toDate }
         }
       }),
 
-      // 5️⃣ Tổng mẫu được lấy
+      // 5️⃣ Sample
       prisma.birthTracking.count({
         where: {
           actualBirthAt: {
@@ -87,21 +77,39 @@ export async function GET(req: NextRequest) {
         }
       }),
 
-      // 6️⃣ Tổng doanh thu
+      // 💰 6️⃣ Doanh thu contract
       prisma.contract.aggregate({
-        _sum: {
-          price: true
-        },
+        _sum: { price: true },
         where: {
-          dateContract: {
-            gte: fromDate,
-            lte: toDate
-          }
+          dateContract: { gte: fromDate, lte: toDate }
+        }
+      }),
+
+      // 💰 7️⃣ Doanh thu renew
+      prisma.renewContract.aggregate({
+        _sum: { price: true },
+        where: {
+          startDate: { gte: fromDate, lte: toDate }
+        }
+      }),
+
+      // 🔢 8️⃣ Số lần renew
+      prisma.renewContract.count({
+        where: {
+          startDate: { gte: fromDate, lte: toDate }
         }
       })
     ])
 
-    const revenue = revenueResult._sum.price || 0
+    // 💰 Tổng doanh thu
+    const toNumber = (val: any) => Number(val || 0);
+
+    const revenue =
+      toNumber(contractRevenue._sum.price) +
+      toNumber(renewRevenue._sum.price);
+
+    // 🔢 Tổng deal (nếu bạn muốn tính cả renew)
+    const totalDeals = totalContracts + renewCount
 
     // 📊 KPI
     const consultRate =
@@ -127,9 +135,13 @@ export async function GET(req: NextRequest) {
         totalUniqueConsultedCustomers,
         totalContracts,
         totalSamples,
+
+        // 👇 NEW
+        renewCount,
+        totalDeals,
+
         revenue,
 
-        // KPI
         consultRate: Number(consultRate.toFixed(2)),
         conversionRate: Number(conversionRate.toFixed(2)),
         sampleRate: Number(sampleRate.toFixed(2))

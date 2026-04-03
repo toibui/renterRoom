@@ -45,6 +45,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
         name: data.name ?? undefined,
         // Chuyển đổi sang Decimal cho Prisma nếu có dữ liệu
         price: data.price !== undefined ? Number(data.price) : undefined,
+        duration: data.duration !== undefined ? Number(data.duration) : undefined,
       },
     });
 

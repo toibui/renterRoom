@@ -34,7 +34,9 @@ model Type {
   id        String     @id @default(uuid())
   name      String?
   price     Decimal?   // dùng Decimal cho tiền tệ
+  duration  Int?       // số năm hợp đồng (ví dụ: 1, 2, 3 năm)
   contracts Contract[]
+  renews    RenewContract[] // 👈 thêm dòng này
 }
 
 model Staff {
@@ -111,9 +113,38 @@ model Contract {
 
   // 👇 THÊM DÒNG NÀY
   birthTracking BirthTracking?
+
+  // 👇 Quan hệ 1 - N
+  renews        RenewContract[]
+
   dateContract  DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model RenewContract {
+  id           String   @id @default(uuid())
+
+  contract     Contract @relation(fields: [contractId], references: [id])
+  contractId   String
+
+  // 🔥 THÊM TYPE
+  type         Type     @relation(fields: [typeId], references: [id])
+  typeId       String
+
+  renewNo      Int
+
+  // 🔥 GIÁ CHI TIẾT
+  basePrice    Decimal?   // giá gốc từ type
+  promote      Decimal?   // giảm giá
+  price        Decimal    // giá thực thu
+
+  startDate    DateTime
+  endDate      DateTime
+
+  createdAt    DateTime @default(now())
+
+  @@unique([contractId, renewNo])
 }
 
 model Target {
