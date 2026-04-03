@@ -17,7 +17,14 @@ export async function GET(req: Request) {
       include: {
         contract: {
           include: {
-            customer: true
+            customer : {
+              select: {
+                id: true,
+                fullName: true,
+                phone: true,
+                edd: true
+              }
+            }
           }
         },
         samples: true,

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Combobox } from "@headlessui/react";
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid';
 
 type CustomerOption = { id: string; fullName: string; phone: string };
 
@@ -132,7 +133,7 @@ export default function CreateContractPage() {
         })
       });
 
-      if (!res.ok) throw new Error('Failed to create contract');
+      if (!res.ok) throw new Error('Failed');
 
       router.push('/contracts');
     } catch (err) {
@@ -144,14 +145,14 @@ export default function CreateContractPage() {
   };
 
   return (
-    <div className="p-4">
-      <h1 className="text-2xl font-bold mb-4">Create New Contract</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-2xl font-bold mb-6">Tạo hợp đồng</h1>
 
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-lg">
+      <form onSubmit={handleSubmit} className="space-y-5 max-w-xl bg-white p-6 rounded-xl shadow">
 
-        {/* Customer */}
+        {/* CUSTOMER */}
         <div>
-          <label className="block mb-1">Customer *</label>
+          <label className="block mb-1 font-medium">Khách hàng *</label>
 
           <Combobox
             value={selectedCustomer || null}
@@ -161,132 +162,168 @@ export default function CreateContractPage() {
           >
             <div className="relative">
 
-              <Combobox.Input
-                className="w-full border px-2 py-1 rounded"
-                displayValue={(c: CustomerOption) =>
-                  c ? `${c.fullName} (${c.phone})` : ""
-                }
-                onChange={(e) => setCustomerQuery(e.target.value)}
-                placeholder="Search customer..."
-                required
-              />
+              <div className="relative">
+                <Combobox.Input
+                  className="w-full border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                  displayValue={(c: CustomerOption) =>
+                    c ? `${c.fullName} (${c.phone})` : ""
+                  }
+                  onChange={(e) => setCustomerQuery(e.target.value)}
+                  placeholder="Tìm khách hàng..."
+                />
 
-              <Combobox.Options className="absolute z-10 w-full border mt-1 max-h-60 overflow-y-auto bg-white rounded shadow">
+                <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+                </Combobox.Button>
+              </div>
 
-                {filteredCustomers.map(c => (
-                  <Combobox.Option
-                    key={c.id}
-                    value={c}
-                    className={({ active }) =>
-                      `px-2 py-1 cursor-pointer ${active ? "bg-blue-100" : ""}`
-                    }
-                  >
-                    {c.fullName} ({c.phone})
-                  </Combobox.Option>
-                ))}
+              <Combobox.Options className="absolute z-20 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
+
+                {filteredCustomers.length === 0 ? (
+                  <div className="p-2 text-gray-500 text-sm">
+                    Không tìm thấy
+                  </div>
+                ) : (
+                  filteredCustomers.map(c => (
+                    <Combobox.Option
+                      key={c.id}
+                      value={c}
+                      className={({ active }) =>
+                        `px-3 py-2 cursor-pointer flex justify-between ${
+                          active ? 'bg-blue-100' : ''
+                        }`
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <div>
+                            <div className="font-medium">{c.fullName}</div>
+                            <div className="text-xs text-gray-500">{c.phone}</div>
+                          </div>
+                          {selected && <CheckIcon className="h-5 w-5 text-blue-600" />}
+                        </>
+                      )}
+                    </Combobox.Option>
+                  ))
+                )}
 
               </Combobox.Options>
-
             </div>
           </Combobox>
         </div>
 
-        {/* Type */}
+        {/* TYPE */}
         <div>
-          <label className="block mb-1">Contract Type *</label>
+          <label className="block mb-1 font-medium">Gói *</label>
 
           <Combobox value={selectedType || null} onChange={handleTypeSelect}>
             <div className="relative">
 
-              <Combobox.Input
-                className="w-full border px-2 py-1 rounded"
-                displayValue={(t: TypeOption) => t ? t.name : ""}
-                onChange={(e) => setTypeQuery(e.target.value)}
-                placeholder="Search type..."
-                required
-              />
+              <div className="relative">
+                <Combobox.Input
+                  className="w-full border px-3 py-2 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
+                  displayValue={(t: TypeOption) => t ? t.name : ""}
+                  onChange={(e) => setTypeQuery(e.target.value)}
+                  placeholder="Tìm gói..."
+                />
 
-              <Combobox.Options className="absolute z-10 w-full border mt-1 max-h-60 overflow-y-auto bg-white rounded shadow">
+                <Combobox.Button className="absolute inset-y-0 right-0 flex items-center pr-2">
+                  <ChevronUpDownIcon className="h-5 w-5 text-gray-400" />
+                </Combobox.Button>
+              </div>
 
-                {filteredTypes.map(t => (
-                  <Combobox.Option
-                    key={t.id}
-                    value={t}
-                    className={({ active }) =>
-                      `px-2 py-1 cursor-pointer ${active ? "bg-blue-100" : ""}`
-                    }
-                  >
-                    {t.name} - {formatMoney(t.price)}
-                  </Combobox.Option>
-                ))}
+              <Combobox.Options className="absolute z-20 mt-1 w-full bg-white border rounded-lg shadow-lg max-h-60 overflow-auto">
+
+                {filteredTypes.length === 0 ? (
+                  <div className="p-2 text-gray-500 text-sm">
+                    Không tìm thấy
+                  </div>
+                ) : (
+                  filteredTypes.map(t => (
+                    <Combobox.Option
+                      key={t.id}
+                      value={t}
+                      className={({ active }) =>
+                        `px-3 py-2 cursor-pointer flex justify-between ${
+                          active ? 'bg-blue-100' : ''
+                        }`
+                      }
+                    >
+                      {({ selected }) => (
+                        <>
+                          <div>
+                            <div className="font-medium">{t.name}</div>
+                            <div className="text-xs text-gray-500">
+                              {formatMoney(t.price)}
+                            </div>
+                          </div>
+                          {selected && <CheckIcon className="h-5 w-5 text-blue-600" />}
+                        </>
+                      )}
+                    </Combobox.Option>
+                  ))
+                )}
 
               </Combobox.Options>
-
             </div>
           </Combobox>
         </div>
 
-        {/* Giá gốc */}
+        {/* PRICE */}
         <div>
           <label className="block mb-1">Giá gốc</label>
-          <input
-            value={formatMoney(basePrice)}
-            readOnly
-            className="w-full border px-2 py-1 rounded bg-gray-100"
-          />
+          <input value={formatMoney(basePrice)} readOnly className="w-full border px-2 py-2 rounded bg-gray-100" />
         </div>
 
-        {/* Khuyến mại */}
         <div>
           <label className="block mb-1">Khuyến mại</label>
           <input
             type="number"
             value={promote}
             onChange={(e) => handlePromoteChange(e.target.value)}
-            className="w-full border px-2 py-1 rounded"
+            className="w-full border px-2 py-2 rounded"
           />
         </div>
 
-        {/* Thành tiền */}
         <div>
           <label className="block mb-1">Thành tiền</label>
           <input
             value={formatMoney(finalPrice)}
             readOnly
-            className="w-full border px-2 py-1 rounded bg-green-50 font-semibold"
+            className="w-full border px-2 py-2 rounded bg-green-50 font-semibold"
           />
         </div>
 
-        {/* Contract No */}
+        {/* NO */}
         <div>
-          <label className="block mb-1">Contract No</label>
+          <label className="block mb-1">Số hợp đồng</label>
           <input
             type="text"
             name="no"
             value={form.no}
             onChange={handleChange}
-            className="w-full border px-2 py-1 rounded"
+            className="w-full border px-2 py-2 rounded"
           />
         </div>
 
-        {/* Date Contract */}
+        {/* DATE */}
         <div>
-          <label className="block mb-1">Contract Date</label>
+          <label className="block mb-1">Ngày ký</label>
           <input
             type="date"
             name="dateContract"
             value={form.dateContract}
             onChange={handleChange}
-            className="w-full border px-2 py-1 rounded"
+            className="w-full border px-2 py-2 rounded"
           />
         </div>
 
         <button
           type="submit"
           disabled={saving}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
+          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
         >
-          {saving ? 'Saving...' : 'Create'}
+          {saving ? 'Đang lưu...' : 'Tạo hợp đồng'}
         </button>
 
       </form>

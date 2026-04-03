@@ -5,9 +5,15 @@ import Link from 'next/link';
 
 type BarcodeStatus = 'NOT_DUE' | 'NOT_ATTACHED' | 'ATTACHED';
 
+type Customer = {
+  id: string;
+  fullName?: string;
+  phone?: string;
+  edd?: string; // 👈 EDD chuyển sang customer
+};
+
 type BirthTracking = {
   id: string;
-  edd?: string;
   actualBirthAt?: string;
   hospitalName?: string;
   birthType?: string;
@@ -17,11 +23,7 @@ type BirthTracking = {
 
   contract?: {
     id: string;
-    customer?: {
-      id: string;
-      fullName?: string;
-      phone?: string;
-    };
+    customer?: Customer;
   } | null;
 };
 
@@ -54,19 +56,13 @@ function calculateBarcodeStatus(
   edd?: string,
   dbStatus?: BarcodeStatus
 ): BarcodeStatus {
-  if (dbStatus === 'ATTACHED') {
-    return 'ATTACHED';
-  }
+  if (dbStatus === 'ATTACHED') return 'ATTACHED';
 
-  if (!edd) {
-    return dbStatus || 'NOT_DUE';
-  }
+  if (!edd) return dbStatus || 'NOT_DUE';
 
   const week = calculateGestationalWeek(edd);
 
-  if (week >= 36) {
-    return 'NOT_ATTACHED';
-  }
+  if (week >= 36) return 'NOT_ATTACHED';
 
   return 'NOT_DUE';
 }
@@ -91,10 +87,12 @@ export default function BirthTrackingPage() {
 
       let filtered = data;
 
-      // Filter sắp sinh
+      // Filter sắp sinh (>= 38 tuần)
       if (barcodeFilter === 'UPCOMING') {
         filtered = data.filter((b: BirthTracking) => {
-          const week = calculateGestationalWeek(b.edd);
+          const edd = b.contract?.customer?.edd;
+          const week = calculateGestationalWeek(edd);
+
           return week >= 38 && !b.actualBirthAt;
         });
       }
@@ -134,7 +132,6 @@ export default function BirthTrackingPage() {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       {/* Header */}
-
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Birth Tracking</h1>
 
@@ -147,7 +144,6 @@ export default function BirthTrackingPage() {
       </div>
 
       {/* Filter */}
-
       <div className="flex gap-3 mb-4">
         <select
           className="border rounded-lg px-3 py-2"
@@ -163,7 +159,6 @@ export default function BirthTrackingPage() {
       </div>
 
       {/* Table */}
-
       <div className="bg-white shadow rounded-lg overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-100 text-gray-600">
@@ -172,6 +167,7 @@ export default function BirthTrackingPage() {
               <th className="p-3 text-left">Phone</th>
               <th className="p-3 text-center">Barcode</th>
               <th className="p-3 text-left">Ngày dự sinh</th>
+              <th className="p-3 text-left">Tuần thai</th>
               <th className="p-3 text-left">Ngày sinh thực tế</th>
               <th className="p-3 text-left">Hospital</th>
               <th className="p-3 text-center">Babies</th>
@@ -182,12 +178,15 @@ export default function BirthTrackingPage() {
 
           <tbody>
             {births.map((b) => {
+              const customer = b.contract?.customer;
+              const edd = customer?.edd;
+
+              const week = calculateGestationalWeek(edd);
+
               const barcodeStatus = calculateBarcodeStatus(
-                b.edd,
+                edd,
                 b.barcodeStatus
               );
-
-              const customer = b.contract?.customer;
 
               return (
                 <tr key={b.id} className="border-t hover:bg-gray-50">
@@ -198,7 +197,6 @@ export default function BirthTrackingPage() {
                   <td className="p-3">{customer?.phone || '-'}</td>
 
                   {/* Barcode */}
-
                   <td className="p-3 text-center">
                     {barcodeStatus === 'NOT_DUE' && (
                       <span className="bg-gray-100 text-gray-600 px-2 py-1 rounded">
@@ -219,9 +217,17 @@ export default function BirthTrackingPage() {
                     )}
                   </td>
 
-                  <td className="p-3">{formatDate(b.edd)}</td>
+                  {/* EDD từ customer */}
+                  <td className="p-3">{formatDate(edd)}</td>
 
-                  <td className="p-3">{formatDate(b.actualBirthAt)}</td>
+                  {/* Tuần thai */}
+                  <td className="p-3">
+                    {week > 0 ? `${week} tuần` : '-'}
+                  </td>
+
+                  <td className="p-3">
+                    {formatDate(b.actualBirthAt)}
+                  </td>
 
                   <td className="p-3">{b.hospitalName || '-'}</td>
 
@@ -250,7 +256,7 @@ export default function BirthTrackingPage() {
 
             {births.length === 0 && (
               <tr>
-                <td colSpan={9} className="text-center py-6 text-gray-400">
+                <td colSpan={10} className="text-center py-6 text-gray-400">
                   Chưa có Birth Tracking nào
                 </td>
               </tr>
