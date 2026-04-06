@@ -178,7 +178,7 @@ export default function RoomsPage() {
                     <td className="p-4 text-center whitespace-nowrap">
                       <div className="flex justify-center gap-2">
                         <Link
-                          href={`/rooms/${r.id}/reading`}
+                          href={`/meter-readings/new?roomId=${r.id}`}
                           className="px-3 py-1 bg-blue-50 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition-all text-xs font-bold border border-blue-200"
                         >
                           Chốt số

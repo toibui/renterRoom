@@ -33,27 +33,25 @@ export async function GET(
   }
 }
 
-// PATCH: Cập nhật trạng thái thanh toán
+// PATCH: Cập nhật trạng thái thanh toán (Có thể Toggle qua lại)
 export async function PATCH(
   request: NextRequest,
-  { params }: RouteContext
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // CẦN THIẾT: Await ở đây
-    const body = await request.json();
-    const { status, paidAt } = body;
+    const { id } = await params;
+    const { status } = await request.json();
 
     const updatedBill = await prisma.bill.update({
       where: { id },
       data: {
-        status: status,
-        paidAt: paidAt ? new Date(paidAt) : null,
+        status: status, // 'PAID' hoặc 'PENDING'
+        paidAt: status === 'PAID' ? new Date() : null, // Nếu trả về PENDING thì xóa ngày thanh toán
       },
     });
 
     return NextResponse.json(updatedBill);
   } catch (error) {
-    console.error("Lỗi API Bill PATCH:", error);
     return NextResponse.json({ error: "Không thể cập nhật trạng thái" }, { status: 500 });
   }
 }
