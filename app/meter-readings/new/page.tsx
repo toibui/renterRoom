@@ -80,101 +80,132 @@ function SmartCreateReadingForm() {
   const usageWater = parseFloat(form.waterNew) - form.waterOld || 0;
 
   return (
-    <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-        {/* Header */}
-        <div className="bg-slate-900 p-8 text-white flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-black tracking-tight uppercase">
-                {roomIdFromQuery ? 'Ghi số phòng cụ thể' : 'Ghi chỉ số định kỳ'}
-            </h1>
-            <p className="text-slate-400 text-sm">Hệ thống tự động đối soát số cũ từ tháng trước</p>
-          </div>
-          {roomIdFromQuery && (
-            <span className="bg-blue-600 text-[10px] font-bold px-3 py-1 rounded-full">CHẾ ĐỘ CHỈ ĐỊNH</span>
-          )}
-        </div>
+    <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+      {/* Header tối giản hơn */}
+      <div className="bg-slate-900 p-6 text-white text-center">
+        <h1 className="text-xl font-black tracking-tight uppercase">
+          {roomIdFromQuery ? `Phòng ${rooms.find((r:any) => r.id === form.roomId)?.roomNumber || ''}` : 'Ghi chỉ số mới'}
+        </h1>
+        <p className="text-slate-400 text-xs mt-1">Tháng {form.month} / {form.year}</p>
+      </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* 1. Chọn nhanh bối cảnh (Nếu chưa có ID) */}
+        {!roomIdFromQuery && (
+          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-1 gap-4">
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Chọn Phòng</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Chọn Phòng</label>
               <select 
-                className={`w-full border-2 rounded-xl p-3 font-bold outline-none transition-all ${
-                    roomIdFromQuery ? 'bg-gray-100 border-slate-200 text-slate-500 cursor-not-allowed' : 'bg-white border-slate-200 focus:border-blue-500'
-                }`}
+                className="w-full border-2 border-slate-200 rounded-xl p-3 font-bold bg-white focus:border-blue-500 outline-none"
                 value={form.roomId}
                 onChange={e => setForm({...form, roomId: e.target.value})}
-                disabled={!!roomIdFromQuery}
                 required
               >
-                <option value="">-- Chọn phòng --</option>
+                <option value="">-- Click để chọn phòng --</option>
                 {rooms.map((r: any) => <option key={r.id} value={r.id}>Phòng {r.roomNumber}</option>)}
               </select>
             </div>
-            {/* ... (Giữ nguyên phần input Month, Year) ... */}
-            <div>
-               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Tháng chốt</label>
-               <input type="number" min="1" max="12" className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold" value={form.month} onChange={e => setForm({...form, month: parseInt(e.target.value)})}/>
+          </div>
+        )}
+
+        {/* 2. Khu vực nhập liệu chính - Thiết kế dạng Stack dọc */}
+        <div className="space-y-4">
+          
+          {/* THẺ ĐIỆN */}
+          <div className={`p-5 rounded-2xl border-2 transition-all ${fetchingOld ? 'opacity-50' : 'bg-amber-50/30 border-amber-100 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-100'}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="bg-amber-500 text-white w-8 h-8 flex items-center justify-center rounded-lg shadow-sm">⚡</span>
+              <h2 className="font-black text-amber-900 uppercase text-sm tracking-wider">Chỉ số Điện (kWh)</h2>
             </div>
-            <div>
-               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Năm</label>
-               <input type="number" className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold" value={form.year} onChange={e => setForm({...form, year: parseInt(e.target.value)})}/>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Số cũ</p>
+                <div className="text-2xl font-black text-slate-400 bg-white/50 rounded-xl p-3 border border-dashed border-amber-200">
+                  {form.electricOld}
+                </div>
+              </div>
+
+              <div className="text-2xl font-light text-slate-300 mt-5">→</div>
+
+              <div className="flex-[1.5]">
+                <p className="text-[10px] font-bold text-amber-600 uppercase mb-1 font-mono">Số mới</p>
+                <input 
+                  type="number" step="0.1" required
+                  placeholder="Nhập số..."
+                  className="w-full bg-white border-2 border-amber-200 rounded-xl p-3 text-2xl font-black text-amber-600 outline-none focus:border-amber-500"
+                  value={form.electricNew}
+                  onChange={e => setForm({...form, electricNew: e.target.value})}
+                />
+              </div>
             </div>
+
+            {usageElectric > 0 && (
+              <div className="mt-3 flex justify-end">
+                <span className="text-xs font-bold text-amber-700 bg-amber-200/50 px-3 py-1 rounded-full">
+                  Sử dụng: {usageElectric.toFixed(1)} kWh
+                </span>
+              </div>
+            )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* KHỐI ĐIỆN */}
-            <div className={`relative p-6 rounded-3xl border-2 transition-all ${fetchingOld ? 'opacity-40 animate-pulse' : 'opacity-100'} bg-amber-50/50 border-amber-100`}>
-              <div className="flex items-center justify-between mb-6">
-                <span className="bg-amber-500 text-white p-2 rounded-lg text-xl">⚡</span>
-                <h2 className="font-black text-amber-800 tracking-tighter">CHỈ SỐ ĐIỆN</h2>
+          {/* THẺ NƯỚC */}
+          <div className={`p-5 rounded-2xl border-2 transition-all ${fetchingOld ? 'opacity-50' : 'bg-blue-50/30 border-blue-100 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100'}`}>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="bg-blue-500 text-white w-8 h-8 flex items-center justify-center rounded-lg shadow-sm">💧</span>
+              <h2 className="font-black text-blue-900 uppercase text-sm tracking-wider">Chỉ số Nước (m³)</h2>
+            </div>
+            
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Số cũ</p>
+                <div className="text-2xl font-black text-slate-400 bg-white/50 rounded-xl p-3 border border-dashed border-blue-200">
+                  {form.waterOld}
+                </div>
               </div>
-              <div className="space-y-6">
-                <div className="flex justify-between items-end border-b border-amber-200 pb-4">
-                  <span className="text-xs font-bold text-amber-600 uppercase">Số cũ</span>
-                  <span className="text-3xl font-black text-amber-900">{form.electricOld}</span>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-amber-600 uppercase mb-2">Số mới ghi được</label>
-                  <input type="number" step="0.1" required className="w-full bg-white border-2 border-amber-300 rounded-2xl p-4 text-2xl font-black text-amber-600 outline-none focus:ring-4 focus:ring-amber-200" placeholder="000.0" value={form.electricNew} onChange={e => setForm({...form, electricNew: e.target.value})}/>
-                </div>
-                <div className="flex justify-between items-center pt-2">
-                  <span className="text-xs font-medium text-amber-700">Tiêu thụ:</span>
-                  <span className="px-3 py-1 bg-amber-200 rounded-full text-amber-800 font-bold">+ {usageElectric.toFixed(1)} kWh</span>
-                </div>
+
+              <div className="text-2xl font-light text-slate-300 mt-5">→</div>
+
+              <div className="flex-[1.5]">
+                <p className="text-[10px] font-bold text-blue-600 uppercase mb-1 font-mono">Số mới</p>
+                <input 
+                  type="number" step="0.1" required
+                  placeholder="Nhập số..."
+                  className="w-full bg-white border-2 border-blue-200 rounded-xl p-3 text-2xl font-black text-blue-600 outline-none focus:border-blue-500"
+                  value={form.waterNew}
+                  onChange={e => setForm({...form, waterNew: e.target.value})}
+                />
               </div>
             </div>
 
-            {/* KHỐI NƯỚC */}
-            <div className={`relative p-6 rounded-3xl border-2 transition-all ${fetchingOld ? 'opacity-40 animate-pulse' : 'opacity-100'} bg-blue-50/50 border-blue-100`}>
-              <div className="flex items-center justify-between mb-6">
-                <span className="bg-blue-500 text-white p-2 rounded-lg text-xl">💧</span>
-                <h2 className="font-black text-blue-800 tracking-tighter">CHỈ SỐ NƯỚC</h2>
+            {usageWater > 0 && (
+              <div className="mt-3 flex justify-end">
+                <span className="text-xs font-bold text-blue-700 bg-blue-200/50 px-3 py-1 rounded-full">
+                  Sử dụng: {usageWater.toFixed(1)} m³
+                </span>
               </div>
-              <div className="space-y-6">
-                <div className="flex justify-between items-end border-b border-blue-200 pb-4">
-                  <span className="text-xs font-bold text-blue-600 uppercase">Số cũ</span>
-                  <span className="text-3xl font-black text-blue-900">{form.waterOld}</span>
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Số mới ghi được</label>
-                  <input type="number" step="0.1" required className="w-full bg-white border-2 border-blue-300 rounded-2xl p-4 text-2xl font-black text-blue-600 outline-none focus:ring-4 focus:ring-blue-200" placeholder="000.0" value={form.waterNew} onChange={e => setForm({...form, waterNew: e.target.value})}/>
-                </div>
-                <div className="flex justify-between items-center pt-2">
-                  <span className="text-xs font-medium text-blue-700">Tiêu thụ:</span>
-                  <span className="px-3 py-1 bg-blue-200 rounded-full text-blue-800 font-bold">+ {usageWater.toFixed(1)} m³</span>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
+        </div>
 
-          <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button type="button" onClick={() => router.back()} className="flex-1 px-8 py-4 text-slate-400 font-bold hover:bg-slate-100 rounded-2xl transition-all">HỦY BỎ</button>
-            <button type="submit" disabled={fetchingOld || saving || !form.roomId} className="flex-[2] bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-200 hover:bg-black transition-all disabled:bg-slate-200">
-              {saving ? 'ĐANG LƯU DỮ LIỆU...' : 'XÁC NHẬN CHỐT SỐ & TẠO BILL'}
-            </button>
-          </div>
-        </form>
+        {/* 3. Nút hành động chính */}
+        <div className="pt-4 space-y-3">
+          <button 
+            type="submit"
+            disabled={fetchingOld || saving || !form.roomId}
+            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-black active:scale-[0.98] transition-all disabled:bg-slate-200 text-lg uppercase tracking-widest"
+          >
+            {saving ? 'Đang lưu...' : 'Lưu & Xuất Hóa Đơn'}
+          </button>
+          <button 
+            type="button" 
+            onClick={() => router.back()}
+            className="w-full py-3 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors"
+          >
+            Hủy bỏ
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
