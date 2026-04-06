@@ -1,11 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    // 1. Xóa hoặc comment dòng baseUrl cũ
+    // "baseUrl": ".", 
+
+    // 2. Thêm dòng này để tắt cảnh báo nếu TypeScript phiên bản > 5.5
+    "ignoreDeprecations": "5.0",
+
     "paths": {
-      "@/*": [
-        "./*"
-      ]
-      // Nếu bạn dùng thư mục src thì sửa thành: "@/*": ["./src/*"]
+      // 3. Đảm bảo path ánh xạ đúng. 
+      // Nếu code nằm trong src: "@/*": ["./src/*"]
+      // Nếu code nằm ở root: "@/*": ["./*"]
+      "@/*": ["./*"]
     },
     "lib": [
       "dom",
@@ -14,7 +19,7 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": false, // Khuyên bạn nên để true để quản lý phòng trọ ít lỗi hơn
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

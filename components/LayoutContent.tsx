@@ -1,6 +1,6 @@
 "use client"
 
-import Sidebar from "./Navbar"
+import Sidebar from "./Sidebar"
 import { useSidebar } from "@/context/SidebarContext"
 
 export default function LayoutContent({ children }: { children: React.ReactNode }) {

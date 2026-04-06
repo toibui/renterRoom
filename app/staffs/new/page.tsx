@@ -12,11 +12,7 @@ type Staff = {
 };
 const roleOptions = [
   { value: 'admin', label: 'Admin' },
-  { value: 'administration', label: 'Hành chính' },
-  { value: 'collection', label: 'Thu mẫu' },
-  { value: 'processing', label: 'Xử lý' },
-  { value: 'quality_control', label: 'Kiểm tra chất lượng' },
-  { value: 'storage', label: 'Lưu trữ' },
+  { value: 'staff', label: 'Nhân viên' },
 ];
 
 export default function CreateStaffPage() {

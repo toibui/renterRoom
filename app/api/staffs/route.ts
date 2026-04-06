@@ -18,7 +18,7 @@ type StaffRoleType = (typeof StaffRoles)[number];
 // GET all staff
 export async function GET() {
   try {
-    const staffList = await prisma.staff.findMany();
+    const staffList = await prisma.user.findMany();
     return NextResponse.json(staffList);
   } catch (err) {
     console.error(err);
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 3️⃣ Kiểm tra email đã tồn tại
-    const existing = await prisma.staff.findUnique({ where: { email } });
+    const existing = await prisma.user.findUnique({ where: { email } });
     if (existing) {
       return NextResponse.json({ error: 'Email already exists' }, { status: 400 });
     }
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // 5️⃣ Tạo staff
-    const newStaff = await prisma.staff.create({
+    const newStaff = await prisma.user.create({
       data: {
         fullName,
         phone: phone ?? null,

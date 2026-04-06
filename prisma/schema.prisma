@@ -8,274 +8,90 @@ datasource db {
   url      = env("DATABASE_URL") // Khôi phục lại dòng này
 }
 
-enum StaffRole {
-  admin
-  administration
-  collection
-  processing
-  quality_control
-  storage
-}
-
-enum BirthStatus {
-  planned
-  contacted
-  delivered
-  cancelled
-}
-
-enum BarcodeStatus {
-  NOT_DUE
-  NOT_ATTACHED
-  ATTACHED
-}
-
-model Type {
-  id        String     @id @default(uuid())
-  name      String?
-  price     Decimal?   // dùng Decimal cho tiền tệ
-  duration  Int?       // số năm hợp đồng (ví dụ: 1, 2, 3 năm)
-  contracts Contract[]
-  renews    RenewContract[] // 👈 thêm dòng này
-}
-
-model Staff {
-  id        String   @id @default(uuid())
-  fullName  String
-  phone     String?
-  email     String @unique
-
-  role      StaffRole
-  isActive  Boolean @default(true)
-  password String
-
-  createdAt DateTime @default(now())
-  consultings Consulting[]
-  samplesCollected Sample[]
-  processings SampleProcessing[]
-  qualityControls QualityControl[]
-  birthFollowUps BirthFollowUp[]
-}
-
-model ChannelMarketing{
-  id        String   @id @default(uuid())
-  name      String 
-  customers Customer[]
-}
-
-model Customer {
-  id        String   @id @default(uuid())
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // Lưu hash mật khẩu
   fullName  String
   phone     String
-  email     String?
-  address   String?
-  pid       String?
+  role      String   @default("ADMIN") // Chỉ có ADMIN hoặc STAFF
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+
+// 1. Bảng Danh mục Phòng
+model Room {
+  id           String   @id @default(cuid())
+  roomNumber   String   @unique
+  basePrice    Float
+  // Thông tin khách thuê lưu trực tiếp ở đây, không cần bảng User riêng cho khách
+  tenantName   String?
+  tenantPhone  String?
+  tenantEmail  String?  // Email này để hệ thống tự động gửi thông báo
+
+  // Trạng thái phòng: true là đang cho thuê/hoạt động, false là ngưng
+  isActive     Boolean  @default(true)
   
-  // add 3 new lines
-  idno      String?
-  iddate    DateTime?
-  idplace   String?
-
-  consulting Consulting[]
-  channelMarketing ChannelMarketing? @relation(fields: [channelMarketingId], references: [id], onDelete: SetNull)
-  channelMarketingId String?
-  dateOfBirth  DateTime?
-  edd          DateTime?
-  contract    Contract[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  meterReadings MeterReading[]
+  bills         Bill[]
 }
 
-model Consulting {
-  id        String   @id @default(uuid())
-  customer  Customer @relation(fields: [customerId], references: [id])
-  customerId String
-  Content   String?
-
-  staff   Staff @relation(fields:[staffid], references: [id])
-  staffid String
-  createdAt DateTime @default(now())
+// 2. Bảng Cấu hình & Lịch sử giá
+model PriceConfig {
+  id            String   @id @default(cuid())
+  electricPrice Float    // Đơn giá điện
+  waterPrice    Float    // Đơn giá nước
+  effectiveDate DateTime @default(now())
+  isActive      Boolean  @default(true) // Chỉ duy nhất 1 bản ghi có true để lấy giá hiện hành
 }
 
-
-model Contract {
-  id            String   @id @default(uuid())
-  customer      Customer @relation(fields: [customerId], references: [id])
-  customerId    String
-  no            String?  @unique
-  type          Type     @relation(fields: [typeId], references: [id])
-  typeId        String
-
-  //add 2 lines
-  promote       Decimal?
-  price         Decimal?
-
-  // 👇 THÊM DÒNG NÀY
-  birthTracking BirthTracking?
-
-  // 👇 Quan hệ 1 - N
-  renews        RenewContract[]
-
-  dateContract  DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model RenewContract {
-  id           String   @id @default(uuid())
-
-  contract     Contract @relation(fields: [contractId], references: [id])
-  contractId   String
-
-  // 🔥 THÊM TYPE
-  type         Type     @relation(fields: [typeId], references: [id])
-  typeId       String
-
-  renewNo      Int
-
-  // 🔥 GIÁ CHI TIẾT
-  basePrice    Decimal?   // giá gốc từ type
-  promote      Decimal?   // giảm giá
-  price        Decimal    // giá thực thu
-
-  startDate    DateTime
-  endDate      DateTime
-
+// 3. Bảng Theo dõi chỉ số (Nhập liệu hàng tháng)
+model MeterReading {
+  id           String   @id @default(cuid())
+  month        Int      // Tháng (1-12)
+  year         Int      // Năm
+  
+  electricOld  Float
+  electricNew  Float
+  waterOld     Float
+  waterNew     Float
+  
   createdAt    DateTime @default(now())
 
-  @@unique([contractId, renewNo])
+  // Quan hệ với Room
+  roomId       String
+  room         Room     @relation(fields: [roomId], references: [id])
+  
+  // Quan hệ 1-1 với Bill (Chốt chỉ số xong là có Bill ngay)
+  bill         Bill?
 }
 
-model Target {
-  id             String    @id @default(uuid())
-  year           Int
-  month          Int
-  monthlyTarget  Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+// 4. Bảng Bill & Trạng thái thanh toán
+model Bill {
+  id            String      @id @default(cuid())
+  totalAmount   Float       // Tổng tiền tính toán cuối cùng
+  status        BillStatus  @default(PENDING)
+  paidAt        DateTime?   // Ngày thực tế khách trả tiền
+  emailSent     Boolean     @default(false)
+  
+  // Lưu vết giá tại thời điểm xuất hóa đơn để đối chiếu
+  appliedElectricPrice Float
+  appliedWaterPrice    Float
+  appliedBasePrice     Float
 
-  @@unique([year, month]) // tránh duplicate target cùng tháng
+  // Quan hệ
+  roomId        String
+  room          Room         @relation(fields: [roomId], references: [id])
+  
+  readingId     String       @unique
+  meterReading  MeterReading @relation(fields: [readingId], references: [id])
+
+  createdAt     DateTime     @default(now())
 }
 
-model BirthTracking {
-  id            String   @id @default(uuid())
-
-  contract      Contract? @relation(fields: [contractId], references: [id])
-  contractId    String?   @unique
-
-  edd           DateTime?
-  actualBirthAt DateTime?
-
-  hospitalName    String?
-  hospitalAddress String?
-
-  birthType     String?
-  babiesCount   Int      @default(1)
-
-  barcodeStatus BarcodeStatus @default(NOT_DUE)
-  status        BirthStatus
-  note          String?
-
-  samples       Sample[]
-  followUps     BirthFollowUp[]
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-model BirthFollowUp {
-  id        String   @id @default(uuid())
-  birth     BirthTracking @relation(fields: [birthId], references: [id])
-  birthId  String
-
-  followType String
-  plannedDate DateTime?
-  contactedAt DateTime?
-  staff Staff @relation(fields:[staffId], references: [id])
-  staffId String
-  note    String?
-}
-
-model Sample {
-  id        String   @id @default(uuid())
-  birth     BirthTracking @relation(fields: [birthId], references: [id])
-  birthId  String
-
-  babyOrder Int
-  collectedBy Staff @relation(fields: [staffId], references: [id])
-  staffId String
-  collectedAt DateTime?
-  condition String?
-
-  processing SampleProcessing[]     // 1 Sample có nhiều Processings
-  externalTests ExternalTest[]      // 1 Sample có nhiều ExternalTests
-  qualityControl QualityControl[]   // 1 Sample có nhiều QC
-  storage Storage[]                 // 1 Sample có thể được lưu nhiều lần
-
-  createdAt DateTime @default(now())
-  @@index([birthId])
-}
-
-model SampleProcessing {
-  id        String   @id @default(uuid())
-  sample    Sample   @relation(fields: [sampleId], references: [id])
-  sampleId  String
-
-  processedBy Staff @relation(fields: [staffId], references: [id])
-  staffId String
-  processedAt DateTime?
-  note String?
-}
-
-model ExternalTest {
-  id        String   @id @default(uuid())
-  sample    Sample   @relation(fields: [sampleId], references: [id])
-  sampleId String
-
-  labName String
-  sentAt DateTime?
-  resultReceivedAt DateTime?
-  resultStatus String
-  note String?
-}
-
-model QualityControl {
-  id        String   @id @default(uuid())
-  sample    Sample   @relation(fields: [sampleId], references: [id])
-  sampleId String
-
-  qcStaff Staff @relation(fields: [staffId], references: [id])
-  staffId String
-  checkedAt DateTime?
-  result ResultQualityControl[]
-  note String?
-}
-
-model ResultQualityControl{
-  id  String   @id @default(uuid())
-  qualityControl QualityControl   @relation(fields: [qcId], references: [id])
-  qcId String
-  status String
-}
-
-model StorageTank {
-  id        String   @id @default(uuid())
-  tankCode  String   @unique
-  description String?
-  location String?
-  storages Storage[]
-}
-
-model Storage {
-  id        String   @id @default(uuid())
-  sample    Sample   @relation(fields: [sampleId], references: [id])
-  sampleId String
-
-  tank     StorageTank @relation(fields: [tankId], references: [id])
-  tankId  String
-
-  storedAt DateTime?
-  removedAt DateTime?
-  status String
+enum BillStatus {
+  PENDING   // Chờ thanh toán
+  PAID      // Đã thanh toán
+  OVERDUE   // Quá hạn
 }

@@ -1,7 +1,7 @@
 import "../styles/globals.css"
 import Providers from "@/components/Providers"
 import { SidebarProvider } from "@/context/SidebarContext"
-import LayoutContent from "../components/LayoutContent" // Chúng ta sẽ tạo file này
+import LayoutContent from "@/components/LayoutContent" // Sửa lại đường dẫn chuẩn
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -9,10 +9,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-slate-50 font-sans text-slate-900 antialiased">
         <Providers>
           <SidebarProvider>
-            {/* LayoutContent là một Client Component, 
-               nó sẽ bọc Sidebar và Main để xử lý logic collapsed 
-            */}
-            <LayoutContent>{children}</LayoutContent>
+            {/* LayoutContent sẽ chứa <Sidebar /> và <main>{children}</main> */}
+            <LayoutContent>
+              {children}
+            </LayoutContent>
           </SidebarProvider>
         </Providers>
       </body>

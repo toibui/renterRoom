@@ -31,15 +31,15 @@ export async function GET(
   }
 
   try {
-    const staff = await prisma.staff.findUnique({
+    const user = await prisma.user.findUnique({
       where: { id }, // UUID string
     });
 
-    if (!staff) {
+    if (!user) {
       return NextResponse.json({ error: "Staff not found" }, { status: 404 });
     }
 
-    return NextResponse.json(staff);
+    return NextResponse.json(user);
   } catch (error) {
     console.error("GET staff error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -94,7 +94,7 @@ export async function PUT(req: NextRequest, context: { params: Promise<{ id: str
     if (body.role !== undefined && session.user.role === "admin") updateData.role = body.role;
     if (body.isActive !== undefined && session.user.role === "admin") updateData.isActive = body.isActive;
 
-    const updatedStaff = await prisma.staff.update({
+    const updatedStaff = await prisma.user.update({
       where: { id },
       data: updateData,
       select: {
@@ -127,7 +127,7 @@ export async function DELETE(req: Request, context: any) {
   if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
 
   try {
-    await prisma.staff.delete({ where: { id } });
+    await prisma.user.delete({ where: { id } });
     return NextResponse.json({ message: 'Staff deleted' });
   } catch (err) {
     console.error(err);

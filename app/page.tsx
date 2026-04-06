@@ -1,134 +1,146 @@
+import Link from 'next/link';
+import { 
+  Home as HomeIcon, 
+  Zap, 
+  ShieldCheck, 
+  BarChart3, 
+  PlusCircle,
+  ArrowRight
+} from 'lucide-react';
+
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white text-gray-800">
+    <main className="min-h-screen bg-white text-slate-900">
+      
+      {/* ===== HERO SECTION ===== */}
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        {/* Decor background */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10">
+          <div className="absolute top-0 left-1/4 w-72 h-72 bg-blue-400/10 blur-[120px] rounded-full" />
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-indigo-400/10 blur-[120px] rounded-full" />
+        </div>
 
-      {/* ===== HERO ===== */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-cyan-400/10 blur-3xl" />
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-bold mb-8 animate-fade-in">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </span>
+            Phiên bản 2026 đã sẵn sàng
+          </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 py-28 text-center">
-          <h1 className="text-5xl md:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-blue-700 to-cyan-500 bg-clip-text text-transparent">
-            Hệ Thống Quản Lý<br />Trung Tâm Tế Bào Gốc
+          <h1 className="text-5xl md:text-7xl font-black tracking-tight mb-8">
+            Quản lý nhà trọ <br />
+            <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-600 bg-clip-text text-transparent">
+              Thông minh & Tự động
+            </span>
           </h1>
 
-          <p className="max-w-3xl mx-auto text-lg text-gray-600 mb-10">
-            Giải pháp số hóa toàn diện cho quản lý mẫu tế bào gốc,
-            hồ sơ bệnh nhân và hệ thống lưu trữ đạt chuẩn y khoa.
+          <p className="max-w-2xl mx-auto text-lg text-slate-500 mb-12 leading-relaxed">
+            Giải pháp số hóa giúp chủ trọ chốt số điện nước, xuất hóa đơn 
+            tự động và theo dõi doanh thu chỉ trong vài lượt chạm.
           </p>
 
-          <div className="flex justify-center gap-6">
-            <a
-              href="/login"
-              className="px-8 py-4 bg-blue-600 text-white rounded-2xl shadow-lg hover:shadow-xl hover:bg-blue-700 transition-all duration-300"
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link
+              href="/meter-readings/new"
+              className="group px-8 py-4 bg-slate-900 text-white rounded-2xl font-bold shadow-xl shadow-slate-200 hover:bg-black transition-all flex items-center justify-center gap-2"
             >
-              Đăng nhập hệ thống
-            </a>
+              <PlusCircle size={20} />
+              Chốt số ngay
+              <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+            </Link>
 
-            <a
-              href="#features"
-              className="px-8 py-4 bg-white border border-blue-600 text-blue-600 rounded-2xl hover:bg-blue-50 transition-all duration-300"
+            <Link
+              href="/rooms"
+              className="px-8 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold hover:bg-slate-50 transition-all"
             >
-              Tìm hiểu thêm
-            </a>
+              Quản lý danh sách phòng
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* ===== FEATURES ===== */}
-      <section id="features" className="py-24 px-6 max-w-7xl mx-auto">
-        <h2 className="text-3xl font-bold text-center mb-16">
-          Tính năng nổi bật
-        </h2>
+      {/* ===== FEATURES GRID ===== */}
+      <section className="py-24 bg-slate-50/50">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl font-black mb-4">Mọi thứ bạn cần để vận hành</h2>
+            <div className="h-1.5 w-20 bg-blue-600 mx-auto rounded-full" />
+          </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-10">
-          <Feature
-            icon="🧬"
-            title="Quản lý mẫu"
-            desc="Theo dõi mã mẫu, vị trí bảo quản và trạng thái xử lý theo thời gian thực."
-          />
-          <Feature
-            icon="👩‍⚕️"
-            title="Hồ sơ bệnh nhân"
-            desc="Lưu trữ thông tin, lịch sử thu thập và quá trình điều trị."
-          />
-          <Feature
-            icon="❄️"
-            title="Kho lạnh"
-            desc="Quản lý vị trí tủ đông, nhiệt độ và kiểm kê định kỳ."
-          />
-          <Feature
-            icon="📊"
-            title="Báo cáo & thống kê"
-            desc="Phân tích dữ liệu và xuất báo cáo chuyên sâu nhanh chóng."
-          />
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <FeatureCard 
+              icon={<Zap className="text-amber-500" />}
+              title="Điện Nước"
+              desc="Nhập chỉ số nhanh, tự động tính toán tiêu thụ và thành tiền theo đơn giá."
+            />
+            <FeatureCard 
+              icon={<HomeIcon className="text-blue-500" />}
+              title="Phòng Trống"
+              desc="Theo dõi trạng thái phòng, thông tin khách thuê và hợp đồng lưu trú."
+            />
+            <FeatureCard 
+              icon={<BarChart3 className="text-emerald-500" />}
+              title="Doanh Thu"
+              desc="Báo cáo tài chính trực quan theo tháng, năm và thống kê nợ phí."
+            />
+            <FeatureCard 
+              icon={<ShieldCheck className="text-indigo-500" />}
+              title="Hóa Đơn"
+              desc="Tự động tạo mẫu hóa đơn chuyên nghiệp để gửi qua Zalo hoặc in ấn."
+            />
+          </div>
         </div>
       </section>
 
-      {/* ===== SECURITY ===== */}
-      <section className="py-24 bg-gradient-to-r from-blue-50 to-cyan-50">
-        <div className="max-w-5xl mx-auto text-center px-6">
-          <h2 className="text-3xl font-bold mb-6">
-            Bảo mật & Tuân thủ tiêu chuẩn y tế
-          </h2>
-          <p className="text-gray-600 text-lg leading-relaxed">
-            Hệ thống áp dụng phân quyền theo vai trò, mã hóa dữ liệu,
-            lưu vết hoạt động (Audit Log) và đảm bảo an toàn thông tin
-            theo quy trình nội bộ trung tâm.
-          </p>
-        </div>
-      </section>
-
-      {/* ===== STATS ===== */}
-      <section className="py-24 px-6 max-w-6xl mx-auto">
-        <div className="grid md:grid-cols-3 gap-10 text-center">
-          <Stat number="10.000+" label="Mẫu đang lưu trữ" />
-          <Stat number="99.9%" label="Độ ổn định hệ thống" />
-          <Stat number="24/7" label="Giám sát kho lạnh" />
+      {/* ===== QUICK STATS ===== */}
+      <section className="py-24">
+        <div className="max-w-5xl mx-auto px-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-12 text-center">
+            <StatItem value="25" label="Phòng đang quản lý" />
+            <StatItem value="100%" label="Chỉ số chính xác" />
+            <StatItem value="< 1p" label="Thời gian tạo hóa đơn" />
+          </div>
         </div>
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="bg-slate-900 text-slate-300 py-10 text-center">
-        <p className="font-medium">
-          Trung Tâm Tế Bào Gốc XYZ
-        </p>
-        <p className="text-sm mt-2 opacity-70">
-          © 2026 — Phiên bản 1.0
-        </p>
+      <footer className="border-t border-slate-100 py-12">
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <HomeIcon size={18} className="text-white" />
+            </div>
+            <span className="font-black tracking-tighter text-xl">HOME MANAGER</span>
+          </div>
+          
+          <div className="text-slate-400 text-sm font-medium">
+            © 2026 Hệ thống quản lý nội bộ.
+          </div>
+        </div>
       </footer>
     </main>
-  )
+  );
 }
 
-function Feature({
-  icon,
-  title,
-  desc,
-}: {
-  icon: string
-  title: string
-  desc: string
-}) {
+function FeatureCard({ icon, title, desc }: { icon: React.ReactNode, title: string, desc: string }) {
   return (
-    <div className="group p-8 rounded-2xl bg-white shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 hover:-translate-y-2">
-      <div className="text-4xl mb-4">{icon}</div>
-      <h3 className="text-lg font-semibold mb-3 group-hover:text-blue-600 transition">
-        {title}
-      </h3>
-      <p className="text-gray-600 text-sm leading-relaxed">
-        {desc}
-      </p>
-    </div>
-  )
-}
-
-function Stat({ number, label }: { number: string; label: string }) {
-  return (
-    <div className="p-10 bg-white rounded-2xl shadow-md">
-      <div className="text-4xl font-bold text-blue-600 mb-3">
-        {number}
+    <div className="p-8 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl hover:border-blue-100 transition-all duration-300 group">
+      <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+        {icon}
       </div>
-      <div className="text-gray-600">{label}</div>
+      <h3 className="text-xl font-bold mb-3">{title}</h3>
+      <p className="text-slate-500 text-sm leading-relaxed">{desc}</p>
     </div>
-  )
+  );
+}
+
+function StatItem({ value, label }: { value: string, label: string }) {
+  return (
+    <div>
+      <div className="text-4xl font-black text-slate-900 mb-2">{value}</div>
+      <div className="text-sm font-bold text-slate-400 uppercase tracking-widest">{label}</div>
+    </div>
+  );
 }
