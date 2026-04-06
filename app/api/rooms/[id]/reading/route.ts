@@ -1,12 +1,14 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Đảm bảo đường dẫn prisma chuẩn của bạn
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest, // Sử dụng NextRequest để đồng bộ với kiểu của Next.js
+  { params }: { params: Promise<{ id: string }> } // Chuyển params thành Promise
 ) {
   try {
-    const roomId = params.id; // Lấy trực tiếp ID từ URL
+    // 1. Await params trước khi sử dụng
+    const { id: roomId } = await params; 
+    
     const body = await request.json();
     
     const { 
@@ -18,7 +20,7 @@ export async function POST(
       waterNew 
     } = body;
 
-    // 1. Kiểm tra phòng có tồn tại không
+    // 2. Kiểm tra phòng có tồn tại không
     const room = await prisma.room.findUnique({
       where: { id: roomId },
     });
@@ -30,7 +32,7 @@ export async function POST(
       );
     }
 
-    // 2. Tạo MeterReading gắn với roomId từ params
+    // 3. Tạo MeterReading gắn với roomId từ params
     const reading = await prisma.meterReading.create({
       data: {
         roomId: roomId,
@@ -43,28 +45,11 @@ export async function POST(
       },
     });
 
-    // 3. Logic bổ sung: Tự động tạo Bill nháp (Nếu cần)
-    // Bạn có thể lấy PriceConfig mới nhất tại đây để nhân thành tiền
-    /*
-    const config = await prisma.priceConfig.findFirst({ where: { isActive: true } });
-    if (config) {
-       await prisma.bill.create({
-         data: {
-           roomId,
-           meterReadingId: reading.id,
-           totalAmount: (electricNew - electricOld) * config.electricPrice + ...
-           status: "DRAFT"
-         }
-       });
-    }
-    */
-
     return NextResponse.json(reading, { status: 201 });
 
   } catch (error: any) {
     console.error("Error creating reading:", error);
     
-    // Xử lý lỗi SSL hoặc lỗi kết nối DB
     if (error.message.includes("certificate")) {
        return NextResponse.json(
          { error: "Lỗi kết nối SSL Database. Vui lòng kiểm tra sslmode trong .env" },

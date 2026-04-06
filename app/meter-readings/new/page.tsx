@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation'; // Thêm useSearchParams
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SmartCreateReadingPage() {
+// 1. Tách logic Form thành một Component riêng
+function SmartCreateReadingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // Lấy roomId từ URL nếu có (ví dụ: /reading?roomId=abc)
   const roomIdFromQuery = searchParams.get('roomId');
 
   const [rooms, setRooms] = useState([]);
@@ -15,7 +15,7 @@ export default function SmartCreateReadingPage() {
   const [saving, setSaving] = useState(false);
   
   const [form, setForm] = useState({
-    roomId: roomIdFromQuery || '', // Ưu tiên roomId từ URL
+    roomId: roomIdFromQuery || '',
     month: new Date().getMonth() + 1,
     year: new Date().getFullYear(),
     electricOld: 0,
@@ -24,17 +24,14 @@ export default function SmartCreateReadingPage() {
     waterNew: ''
   });
 
-  // 1. Load danh sách phòng (chỉ cần nếu không có roomId sẵn)
   useEffect(() => {
     fetch('/api/rooms').then(res => res.json()).then(setRooms);
   }, []);
 
-  // 2. Hàm lấy số cũ từ hệ thống
   const fetchLastIndex = useCallback(async (roomId: string, month: number, year: number) => {
     if (!roomId) return;
     setFetchingOld(true);
     try {
-      // API này sẽ trả về số cuối cùng của phòng đó
       const res = await fetch(`/api/meter-readings/last-index?roomId=${roomId}&month=${month}&year=${year}`);
       const data = await res.json();
       setForm(prev => ({
@@ -49,15 +46,12 @@ export default function SmartCreateReadingPage() {
     }
   }, []);
 
-  // Tự động load số cũ khi thay đổi Phòng/Tháng/Năm
   useEffect(() => {
     fetchLastIndex(form.roomId, form.month, form.year);
   }, [form.roomId, form.month, form.year, fetchLastIndex]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Validation
     if (parseFloat(form.electricNew) < form.electricOld || parseFloat(form.waterNew) < form.waterOld) {
       alert("Số mới không được nhỏ hơn số cũ!");
       return;
@@ -65,8 +59,6 @@ export default function SmartCreateReadingPage() {
 
     setSaving(true);
     try {
-      // Nếu có roomId từ URL, ta có thể dùng API path /api/rooms/[id]/reading như đã viết lúc nãy
-      // Hoặc dùng API chung /api/meter-readings đều được. Ở đây dùng chung cho tiện:
       const res = await fetch('/api/meter-readings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -88,9 +80,7 @@ export default function SmartCreateReadingPage() {
   const usageWater = parseFloat(form.waterNew) - form.waterOld || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-        
+    <div className="max-w-4xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
         {/* Header */}
         <div className="bg-slate-900 p-8 text-white flex justify-between items-center">
           <div>
@@ -105,8 +95,6 @@ export default function SmartCreateReadingPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-8">
-          
-          {/* Section 1: Thông tin chung */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
             <div>
               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Chọn Phòng</label>
@@ -116,30 +104,21 @@ export default function SmartCreateReadingPage() {
                 }`}
                 value={form.roomId}
                 onChange={e => setForm({...form, roomId: e.target.value})}
-                disabled={!!roomIdFromQuery} // Khóa chọn phòng nếu đã có ID từ URL
+                disabled={!!roomIdFromQuery}
                 required
               >
                 <option value="">-- Chọn phòng --</option>
                 {rooms.map((r: any) => <option key={r.id} value={r.id}>Phòng {r.roomNumber}</option>)}
               </select>
             </div>
+            {/* ... (Giữ nguyên phần input Month, Year) ... */}
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Tháng chốt</label>
-              <input 
-                type="number" min="1" max="12"
-                className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold" 
-                value={form.month}
-                onChange={e => setForm({...form, month: parseInt(e.target.value)})}
-              />
+               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Tháng chốt</label>
+               <input type="number" min="1" max="12" className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold" value={form.month} onChange={e => setForm({...form, month: parseInt(e.target.value)})}/>
             </div>
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Năm</label>
-              <input 
-                type="number"
-                className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold" 
-                value={form.year}
-                onChange={e => setForm({...form, year: parseInt(e.target.value)})}
-              />
+               <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Năm</label>
+               <input type="number" className="w-full bg-white border-2 border-slate-200 rounded-xl p-3 font-bold" value={form.year} onChange={e => setForm({...form, year: parseInt(e.target.value)})}/>
             </div>
           </div>
 
@@ -157,19 +136,11 @@ export default function SmartCreateReadingPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-amber-600 uppercase mb-2">Số mới ghi được</label>
-                  <input 
-                    type="number" step="0.1" required
-                    className="w-full bg-white border-2 border-amber-300 rounded-2xl p-4 text-2xl font-black text-amber-600 outline-none focus:ring-4 focus:ring-amber-200"
-                    placeholder="000.0"
-                    value={form.electricNew}
-                    onChange={e => setForm({...form, electricNew: e.target.value})}
-                  />
+                  <input type="number" step="0.1" required className="w-full bg-white border-2 border-amber-300 rounded-2xl p-4 text-2xl font-black text-amber-600 outline-none focus:ring-4 focus:ring-amber-200" placeholder="000.0" value={form.electricNew} onChange={e => setForm({...form, electricNew: e.target.value})}/>
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xs font-medium text-amber-700">Tiêu thụ:</span>
-                  <span className="px-3 py-1 bg-amber-200 rounded-full text-amber-800 font-bold">
-                    + {usageElectric.toFixed(1)} kWh
-                  </span>
+                  <span className="px-3 py-1 bg-amber-200 rounded-full text-amber-800 font-bold">+ {usageElectric.toFixed(1)} kWh</span>
                 </div>
               </div>
             </div>
@@ -187,42 +158,39 @@ export default function SmartCreateReadingPage() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-blue-600 uppercase mb-2">Số mới ghi được</label>
-                  <input 
-                    type="number" step="0.1" required
-                    className="w-full bg-white border-2 border-blue-300 rounded-2xl p-4 text-2xl font-black text-blue-600 outline-none focus:ring-4 focus:ring-blue-200"
-                    placeholder="000.0"
-                    value={form.waterNew}
-                    onChange={e => setForm({...form, waterNew: e.target.value})}
-                  />
+                  <input type="number" step="0.1" required className="w-full bg-white border-2 border-blue-300 rounded-2xl p-4 text-2xl font-black text-blue-600 outline-none focus:ring-4 focus:ring-blue-200" placeholder="000.0" value={form.waterNew} onChange={e => setForm({...form, waterNew: e.target.value})}/>
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-xs font-medium text-blue-700">Tiêu thụ:</span>
-                  <span className="px-3 py-1 bg-blue-200 rounded-full text-blue-800 font-bold">
-                    + {usageWater.toFixed(1)} m³
-                  </span>
+                  <span className="px-3 py-1 bg-blue-200 rounded-full text-blue-800 font-bold">+ {usageWater.toFixed(1)} m³</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row gap-4 pt-4">
-            <button 
-              type="button" 
-              onClick={() => router.back()}
-              className="flex-1 px-8 py-4 text-slate-400 font-bold hover:bg-slate-100 rounded-2xl transition-all"
-            >
-              HỦY BỎ
-            </button>
-            <button 
-              type="submit"
-              disabled={fetchingOld || saving || !form.roomId}
-              className="flex-[2] bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-200 hover:bg-black transition-all disabled:bg-slate-200"
-            >
+            <button type="button" onClick={() => router.back()} className="flex-1 px-8 py-4 text-slate-400 font-bold hover:bg-slate-100 rounded-2xl transition-all">HỦY BỎ</button>
+            <button type="submit" disabled={fetchingOld || saving || !form.roomId} className="flex-[2] bg-slate-900 text-white font-black py-4 rounded-2xl shadow-xl shadow-slate-200 hover:bg-black transition-all disabled:bg-slate-200">
               {saving ? 'ĐANG LƯU DỮ LIỆU...' : 'XÁC NHẬN CHỐT SỐ & TẠO BILL'}
             </button>
           </div>
         </form>
-      </div>
+    </div>
+  );
+}
+
+// 2. Component chính bao bọc bởi Suspense
+export default function SmartCreateReadingPage() {
+  return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <Suspense fallback={
+        <div className="max-w-4xl mx-auto flex items-center justify-center p-20 bg-white rounded-3xl shadow-xl">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
+          <span className="ml-4 font-bold text-slate-600">Đang chuẩn bị biểu mẫu...</span>
+        </div>
+      }>
+        <SmartCreateReadingForm />
+      </Suspense>
     </div>
   );
 }
