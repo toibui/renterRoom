@@ -9,7 +9,9 @@ import {
   Settings, LogOut, User, Menu, X, HardDrive,
   Target,
   TrendingUp,
-  Home
+  Home,
+  Receipt,
+  Sigma
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSidebar } from "@/context/SidebarContext"
@@ -58,12 +60,12 @@ export default function Sidebar() {
       <div className="flex-1 px-3 space-y-4 overflow-y-auto scrollbar-hide py-4">
         <NavGroup label="Quản lý phòng" collapsed={collapsed}>
           <NavItem href="/rooms" icon={<Home size={20} />} label="Phòng" pathname={pathname} collapsed={collapsed} />
-          <NavItem href="/meter-readings" icon={<MessageCircle size={20} />} label="Chỉ số điện nước" pathname={pathname} collapsed={collapsed} />
+          <NavItem href="/meter-readings" icon={<Sigma size={20} />} label="Chỉ số điện nước" pathname={pathname} collapsed={collapsed} />
          
         </NavGroup>
 
         <NavGroup label="Hóa đơn thanh toán" collapsed={collapsed}>
-          <NavItem href="/bills" icon={<Baby size={20} />} label="Hóa đơn" pathname={pathname} collapsed={collapsed} />
+          <NavItem href="/bills" icon={<Receipt size={20} />} label="Hóa đơn" pathname={pathname} collapsed={collapsed} />
         </NavGroup>
 
         <NavGroup label="Cấu hình hệ thống" collapsed={collapsed}>

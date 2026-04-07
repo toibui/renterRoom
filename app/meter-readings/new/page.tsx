@@ -1,9 +1,17 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { 
+  Zap, 
+  Droplets, 
+  ArrowLeft, 
+  Save, 
+  Loader2, 
+  CheckCircle2,
+  AlertCircle
+} from 'lucide-react';
 
-// 1. Tách logic Form thành một Component riêng
 function SmartCreateReadingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,8 +60,11 @@ function SmartCreateReadingForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (parseFloat(form.electricNew) < form.electricOld || parseFloat(form.waterNew) < form.waterOld) {
-      alert("Số mới không được nhỏ hơn số cũ!");
+    const eNew = parseFloat(form.electricNew);
+    const wNew = parseFloat(form.waterNew);
+
+    if (eNew < form.electricOld || wNew < form.waterOld) {
+      alert("⚠️ Số mới không được nhỏ hơn số cũ!");
       return;
     }
 
@@ -66,7 +77,6 @@ function SmartCreateReadingForm() {
       });
       
       if (res.ok) {
-        alert("Ghi số thành công!");
         router.push('/meter-readings');
       }
     } catch (err) {
@@ -79,61 +89,74 @@ function SmartCreateReadingForm() {
   const usageElectric = parseFloat(form.electricNew) - form.electricOld || 0;
   const usageWater = parseFloat(form.waterNew) - form.waterOld || 0;
 
+  const selectedRoom = rooms.find((r: any) => r.id === form.roomId);
+
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
-      {/* Header tối giản hơn */}
-      <div className="bg-slate-900 p-6 text-white text-center">
-        <h1 className="text-xl font-black tracking-tight uppercase">
-          {roomIdFromQuery ? `Phòng ${rooms.find((r:any) => r.id === form.roomId)?.roomNumber || ''}` : 'Ghi chỉ số mới'}
+    <div className="max-w-xl mx-auto pb-20">
+      {/* MOBILE HEADER: Cố định để luôn thấy nút lưu */}
+      <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 py-3 flex items-center justify-between">
+        <button onClick={() => router.back()} className="p-2 -ml-2 text-slate-500">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="font-black text-slate-900 tracking-tight">
+          {roomIdFromQuery ? `P.${selectedRoom?.roomNumber || '...'}` : 'GHI SỐ MỚI'}
         </h1>
-        <p className="text-slate-400 text-xs mt-1">Tháng {form.month} / {form.year}</p>
+        <div className="w-10"></div> {/* Spacer */}
       </div>
 
-      <form onSubmit={handleSubmit} className="p-6 space-y-6">
-        {/* 1. Chọn nhanh bối cảnh (Nếu chưa có ID) */}
-        {!roomIdFromQuery && (
-          <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 grid grid-cols-1 gap-4">
+      <form onSubmit={handleSubmit} className="p-4 space-y-5">
+        {/* THÔNG TIN CHUNG */}
+        <div className="bg-slate-900 rounded-3xl p-5 text-white shadow-xl shadow-slate-200">
+          <div className="flex justify-between items-end">
             <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase mb-1">Chọn Phòng</label>
-              <select 
-                className="w-full border-2 border-slate-200 rounded-xl p-3 font-bold bg-white focus:border-blue-500 outline-none"
-                value={form.roomId}
-                onChange={e => setForm({...form, roomId: e.target.value})}
-                required
-              >
-                <option value="">-- Click để chọn phòng --</option>
-                {rooms.map((r: any) => <option key={r.id} value={r.id}>Phòng {r.roomNumber}</option>)}
-              </select>
+              <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Kỳ hóa đơn</p>
+              <h2 className="text-xl font-black italic">Tháng {form.month} / {form.year}</h2>
             </div>
+            {!roomIdFromQuery && (
+              <div className="flex-1 ml-6">
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1 text-right">Chọn phòng</p>
+                <select 
+                  className="w-full bg-slate-800 border-none rounded-xl py-2 px-3 text-sm font-bold focus:ring-2 ring-blue-500 outline-none"
+                  value={form.roomId}
+                  onChange={e => setForm({...form, roomId: e.target.value})}
+                  required
+                >
+                  <option value="">-- Chọn --</option>
+                  {rooms.map((r: any) => <option key={r.id} value={r.id}>Phòng {r.roomNumber}</option>)}
+                </select>
+              </div>
+            )}
           </div>
-        )}
+        </div>
 
-        {/* 2. Khu vực nhập liệu chính - Thiết kế dạng Stack dọc */}
-        <div className="space-y-4">
+        {/* KHU VỰC NHẬP LIỆU CHÍNH */}
+        <div className="grid grid-cols-1 gap-5">
           
           {/* THẺ ĐIỆN */}
-          <div className={`p-5 rounded-2xl border-2 transition-all ${fetchingOld ? 'opacity-50' : 'bg-amber-50/30 border-amber-100 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-100'}`}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="bg-amber-500 text-white w-8 h-8 flex items-center justify-center rounded-lg shadow-sm">⚡</span>
-              <h2 className="font-black text-amber-900 uppercase text-sm tracking-wider">Chỉ số Điện (kWh)</h2>
+          <div className={`relative group rounded-[2.5rem] p-6 border-2 transition-all duration-300 ${fetchingOld ? 'opacity-50' : 'bg-white border-slate-100 focus-within:border-amber-400 focus-within:shadow-2xl focus-within:shadow-amber-100'}`}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-amber-500 text-white flex items-center justify-center rounded-2xl shadow-lg shadow-amber-200">
+                <Zap size={20} fill="currentColor" />
+              </div>
+              <span className="font-black text-slate-900 uppercase text-xs tracking-widest">Chỉ số Điện (kWh)</span>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <p className="text-[10px] font-bold text-amber-600 uppercase mb-1">Số cũ</p>
-                <div className="text-2xl font-black text-slate-400 bg-white/50 rounded-xl p-3 border border-dashed border-amber-200">
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-center">
+                <p className="text-[10px] font-black text-slate-300 uppercase mb-2">Số cũ</p>
+                <div className="text-xl font-black text-slate-400 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
                   {form.electricOld}
                 </div>
               </div>
 
-              <div className="text-2xl font-light text-slate-300 mt-5">→</div>
+              <div className="h-8 w-[2px] bg-slate-100 mt-6"></div>
 
-              <div className="flex-[1.5]">
-                <p className="text-[10px] font-bold text-amber-600 uppercase mb-1 font-mono">Số mới</p>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-amber-500 uppercase mb-2 ml-1">Số mới</p>
                 <input 
-                  type="number" step="0.1" required
-                  placeholder="Nhập số..."
-                  className="w-full bg-white border-2 border-amber-200 rounded-xl p-3 text-2xl font-black text-amber-600 outline-none focus:border-amber-500"
+                  type="number" inputMode="decimal" step="0.1" required
+                  placeholder="0.0"
+                  className="w-full bg-amber-50 border-2 border-amber-100 rounded-2xl px-4 py-4 text-3xl font-black text-amber-600 outline-none focus:bg-white focus:border-amber-500 transition-all"
                   value={form.electricNew}
                   onChange={e => setForm({...form, electricNew: e.target.value})}
                 />
@@ -141,37 +164,37 @@ function SmartCreateReadingForm() {
             </div>
 
             {usageElectric > 0 && (
-              <div className="mt-3 flex justify-end">
-                <span className="text-xs font-bold text-amber-700 bg-amber-200/50 px-3 py-1 rounded-full">
-                  Sử dụng: {usageElectric.toFixed(1)} kWh
-                </span>
+              <div className="mt-4 flex items-center gap-2 text-amber-700 font-bold bg-amber-100/50 w-fit px-4 py-1.5 rounded-full text-xs">
+                <CheckCircle2 size={14} /> Tiêu thụ: {usageElectric.toFixed(1)} kWh
               </div>
             )}
           </div>
 
           {/* THẺ NƯỚC */}
-          <div className={`p-5 rounded-2xl border-2 transition-all ${fetchingOld ? 'opacity-50' : 'bg-blue-50/30 border-blue-100 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-100'}`}>
-            <div className="flex items-center gap-2 mb-4">
-              <span className="bg-blue-500 text-white w-8 h-8 flex items-center justify-center rounded-lg shadow-sm">💧</span>
-              <h2 className="font-black text-blue-900 uppercase text-sm tracking-wider">Chỉ số Nước (m³)</h2>
+          <div className={`relative group rounded-[2.5rem] p-6 border-2 transition-all duration-300 ${fetchingOld ? 'opacity-50' : 'bg-white border-slate-100 focus-within:border-blue-400 focus-within:shadow-2xl focus-within:shadow-blue-100'}`}>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-blue-500 text-white flex items-center justify-center rounded-2xl shadow-lg shadow-blue-200">
+                <Droplets size={20} fill="currentColor" />
+              </div>
+              <span className="font-black text-slate-900 uppercase text-xs tracking-widest">Chỉ số Nước (m³)</span>
             </div>
-            
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <p className="text-[10px] font-bold text-blue-600 uppercase mb-1">Số cũ</p>
-                <div className="text-2xl font-black text-slate-400 bg-white/50 rounded-xl p-3 border border-dashed border-blue-200">
+
+            <div className="flex items-center justify-between gap-4">
+              <div className="text-center">
+                <p className="text-[10px] font-black text-slate-300 uppercase mb-2">Số cũ</p>
+                <div className="text-xl font-black text-slate-400 bg-slate-50 px-4 py-2 rounded-2xl border border-slate-100">
                   {form.waterOld}
                 </div>
               </div>
 
-              <div className="text-2xl font-light text-slate-300 mt-5">→</div>
+              <div className="h-8 w-[2px] bg-slate-100 mt-6"></div>
 
-              <div className="flex-[1.5]">
-                <p className="text-[10px] font-bold text-blue-600 uppercase mb-1 font-mono">Số mới</p>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-blue-500 uppercase mb-2 ml-1">Số mới</p>
                 <input 
-                  type="number" step="0.1" required
-                  placeholder="Nhập số..."
-                  className="w-full bg-white border-2 border-blue-200 rounded-xl p-3 text-2xl font-black text-blue-600 outline-none focus:border-blue-500"
+                  type="number" inputMode="decimal" step="0.1" required
+                  placeholder="0.0"
+                  className="w-full bg-blue-50 border-2 border-blue-100 rounded-2xl px-4 py-4 text-3xl font-black text-blue-600 outline-none focus:bg-white focus:border-blue-500 transition-all"
                   value={form.waterNew}
                   onChange={e => setForm({...form, waterNew: e.target.value})}
                 />
@@ -179,30 +202,22 @@ function SmartCreateReadingForm() {
             </div>
 
             {usageWater > 0 && (
-              <div className="mt-3 flex justify-end">
-                <span className="text-xs font-bold text-blue-700 bg-blue-200/50 px-3 py-1 rounded-full">
-                  Sử dụng: {usageWater.toFixed(1)} m³
-                </span>
+              <div className="mt-4 flex items-center gap-2 text-blue-700 font-bold bg-blue-100/50 w-fit px-4 py-1.5 rounded-full text-xs">
+                <CheckCircle2 size={14} /> Tiêu thụ: {usageWater.toFixed(1)} m³
               </div>
             )}
           </div>
         </div>
 
-        {/* 3. Nút hành động chính */}
-        <div className="pt-4 space-y-3">
+        {/* NÚT LƯU - Dạng Floating cố định ở dưới trên mobile để tiện tay cái */}
+        <div className="fixed bottom-6 left-4 right-4 z-40 md:static md:mt-10">
           <button 
             type="submit"
             disabled={fetchingOld || saving || !form.roomId}
-            className="w-full bg-slate-900 text-white font-black py-4 rounded-2xl shadow-lg hover:bg-black active:scale-[0.98] transition-all disabled:bg-slate-200 text-lg uppercase tracking-widest"
+            className="w-full bg-blue-600 text-white font-black py-5 rounded-[2rem] shadow-2xl shadow-blue-200 flex items-center justify-center gap-3 active:scale-[0.95] transition-all disabled:bg-slate-200 disabled:shadow-none text-lg uppercase tracking-tighter"
           >
+            {saving ? <Loader2 className="animate-spin" /> : <Save size={24} />}
             {saving ? 'Đang lưu...' : 'Lưu & Xuất Hóa Đơn'}
-          </button>
-          <button 
-            type="button" 
-            onClick={() => router.back()}
-            className="w-full py-3 text-slate-400 font-bold text-sm hover:text-slate-600 transition-colors"
-          >
-            Hủy bỏ
           </button>
         </div>
       </form>
@@ -210,14 +225,13 @@ function SmartCreateReadingForm() {
   );
 }
 
-// 2. Component chính bao bọc bởi Suspense
 export default function SmartCreateReadingPage() {
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-50">
       <Suspense fallback={
-        <div className="max-w-4xl mx-auto flex items-center justify-center p-20 bg-white rounded-3xl shadow-xl">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-          <span className="ml-4 font-bold text-slate-600">Đang chuẩn bị biểu mẫu...</span>
+        <div className="flex flex-col items-center justify-center h-screen bg-white">
+          <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
+          <span className="font-bold text-slate-400 animate-pulse">Đang chuẩn bị...</span>
         </div>
       }>
         <SmartCreateReadingForm />

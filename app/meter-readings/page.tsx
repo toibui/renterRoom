@@ -2,6 +2,17 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { 
+  Plus, 
+  Search, 
+  Zap, 
+  Droplets, 
+  RotateCcw, 
+  Edit3, 
+  ChevronRight, 
+  FileText,
+  Calendar
+} from 'lucide-react';
 
 export default function MeterReadingsPage() {
   const [readings, setReadings] = useState([]);
@@ -21,9 +32,8 @@ export default function MeterReadingsPage() {
     fetchReadings();
   }, []);
 
-  // Hàm xử lý tạo lại Bill
   const handleRecreateBill = async (readingId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn tính toán lại hóa đơn cho kỳ này không? Bill cũ (nếu có) sẽ bị thay thế.")) return;
+    if (!confirm("Tính lại hóa đơn cho kỳ này? Bill cũ sẽ bị thay thế.")) return;
 
     try {
       const res = await fetch('/api/bills', {
@@ -34,7 +44,7 @@ export default function MeterReadingsPage() {
 
       if (res.ok) {
         alert("Đã tạo lại hóa đơn thành công!");
-        fetchReadings(); // Load lại để cập nhật trạng thái "Đã xuất Bill"
+        fetchReadings();
       } else {
         const error = await res.json();
         alert("Lỗi: " + error.error);
@@ -45,82 +55,150 @@ export default function MeterReadingsPage() {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Chốt số điện nước</h1>
-          <p className="text-sm text-gray-500">Quản lý chỉ số tiêu thụ hàng tháng của các phòng</p>
+    <div className="min-h-screen bg-slate-50 pb-20 md:pb-10">
+      {/* HEADER CỐ ĐỊNH TRÊN MOBILE */}
+      <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-4 md:px-8">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
+          <div>
+            <h1 className="text-xl md:text-2xl font-black text-slate-900">Chốt số điện nước</h1>
+            <p className="text-xs text-slate-500 hidden md:block">Quản lý chỉ số tiêu thụ hàng tháng</p>
+          </div>
+          <Link 
+            href="/meter-readings/new" 
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-xl font-bold shadow-lg shadow-blue-200 transition-all text-sm"
+          >
+            <Plus size={18} />
+            <span className="hidden sm:inline">Chốt số mới</span>
+            <span className="sm:hidden">Mới</span>
+          </Link>
         </div>
-        <Link href="/meter-readings/new" className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg font-medium shadow-sm transition-all">
-          + Chốt số mới
-        </Link>
       </div>
 
-      {loading ? (
-        <div className="text-center py-20 text-gray-400 font-medium">Đang tải dữ liệu...</div>
-      ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-gray-600 border-b">
-              <tr>
-                <th className="p-4 text-left">Phòng</th>
-                <th className="p-4 text-left">Kỳ hóa đơn</th>
-                <th className="p-4 text-left">Chỉ số Điện</th>
-                <th className="p-4 text-left">Chỉ số Nước</th>
-                <th className="p-4 text-left">Tiêu thụ</th>
-                <th className="p-4 text-center">Trạng thái Bill</th>
-                <th className="p-4 text-right">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+      <div className="max-w-7xl mx-auto p-4 md:p-8">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+            <p className="font-medium">Đang tải dữ liệu...</p>
+          </div>
+        ) : (
+          <>
+            {/* GIAO DIỆN MOBILE: DẠNG CARD (Ẩn trên desktop) */}
+            <div className="grid grid-cols-1 gap-4 md:hidden">
               {readings.map((r: any) => (
-                <tr key={r.id} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="p-4 font-bold text-gray-700">{r.room.roomNumber}</td>
-                  <td className="p-4 text-gray-600">Tháng {r.month}/{r.year}</td>
-                  <td className="p-4">
-                    <span className="text-gray-400 text-xs">{r.electricOld}</span> → <span className="font-semibold text-amber-600">{r.electricNew}</span>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-gray-400 text-xs">{r.waterOld}</span> → <span className="font-semibold text-blue-600">{r.waterNew}</span>
-                  </td>
-                  <td className="p-4 text-xs">
-                    <div className="text-amber-700 font-medium">⚡ {r.electricNew - r.electricOld} kWh</div>
-                    <div className="text-blue-700 font-medium">💧 {r.waterNew - r.waterOld} m³</div>
-                  </td>
-                  <td className="p-4 text-center">
+                <div key={r.id} className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 relative overflow-hidden">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-md uppercase tracking-wider">
+                        Phòng {r.room.roomNumber}
+                      </span>
+                      <div className="flex items-center gap-1 text-slate-500 text-sm mt-1">
+                        <Calendar size={14} />
+                        Tháng {r.month}/{r.year}
+                      </div>
+                    </div>
                     {r.bill ? (
-                      <Link href={`/bills/${r.bill.id}`} className="text-emerald-600 bg-emerald-50 px-2 py-1 rounded text-[10px] font-bold uppercase hover:bg-emerald-100 transition-colors">
-                        ✅ Xem Bill
+                      <Link href={`/bills/${r.bill.id}`} className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-full text-xs font-bold transition-active">
+                        <FileText size={14} />
+                        Xem Bill
                       </Link>
                     ) : (
-                      <span className="text-gray-400 bg-gray-50 px-2 py-1 rounded text-[10px] font-bold uppercase">Chưa có Bill</span>
+                      <span className="text-slate-400 bg-slate-50 px-3 py-1.5 rounded-full text-xs font-bold">
+                        Chưa có Bill
+                      </span>
                     )}
-                  </td>
-                  <td className="p-4 text-right space-x-2">
-                    {/* Nút Sửa thông số */}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-100">
+                      <div className="flex items-center gap-1 text-amber-700 font-bold text-xs mb-1">
+                        <Zap size={14} /> ĐIỆN
+                      </div>
+                      <div className="text-slate-700 font-black text-lg">
+                        {r.electricNew - r.electricOld} <span className="text-[10px] font-normal text-slate-400">kWh</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400">{r.electricOld} → {r.electricNew}</div>
+                    </div>
+
+                    <div className="bg-blue-50/50 p-3 rounded-xl border border-blue-100">
+                      <div className="flex items-center gap-1 text-blue-700 font-bold text-xs mb-1">
+                        <Droplets size={14} /> NƯỚC
+                      </div>
+                      <div className="text-slate-700 font-black text-lg">
+                        {r.waterNew - r.waterOld} <span className="text-[10px] font-normal text-slate-400">m³</span>
+                      </div>
+                      <div className="text-[10px] text-slate-400">{r.waterOld} → {r.waterNew}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 border-t border-slate-50 pt-3">
                     <Link 
                       href={`/meter-readings/${r.id}`}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-blue-100 hover:text-blue-600 transition-all"
-                      title="Sửa chỉ số"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-50 text-slate-600 rounded-xl font-bold text-sm"
                     >
-                      ✏️
+                      <Edit3 size={16} /> Sửa
                     </Link>
-
-                    {/* Nút Tạo lại Bill */}
                     <button 
                       onClick={() => handleRecreateBill(r.id)}
-                      className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 text-gray-600 hover:bg-amber-100 hover:text-amber-600 transition-all"
-                      title="Tính lại tiền hóa đơn"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-50 text-amber-600 rounded-xl font-bold text-sm"
                     >
-                      🔄
+                      <RotateCcw size={16} /> Tính lại tiền
                     </button>
-                  </td>
-                </tr>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            </div>
+
+            {/* GIAO DIỆN DESKTOP: DẠNG TABLE (Ẩn trên mobile) */}
+            <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                  <tr>
+                    <th className="p-5 text-left font-bold uppercase tracking-wider">Phòng</th>
+                    <th className="p-5 text-left font-bold uppercase tracking-wider">Kỳ hóa đơn</th>
+                    <th className="p-5 text-left font-bold uppercase tracking-wider">Điện (kWh)</th>
+                    <th className="p-5 text-left font-bold uppercase tracking-wider">Nước (m³)</th>
+                    <th className="p-5 text-center font-bold uppercase tracking-wider">Trạng thái</th>
+                    <th className="p-5 text-right font-bold uppercase tracking-wider">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {readings.map((r: any) => (
+                    <tr key={r.id} className="hover:bg-blue-50/20 transition-colors group">
+                      <td className="p-5 font-black text-slate-900">P.{r.room.roomNumber}</td>
+                      <td className="p-5 font-medium text-slate-600">Tháng {r.month}/{r.year}</td>
+                      <td className="p-5">
+                        <div className="font-bold text-amber-600">{r.electricNew - r.electricOld}</div>
+                        <div className="text-[10px] text-slate-400">{r.electricOld} → {r.electricNew}</div>
+                      </td>
+                      <td className="p-5">
+                        <div className="font-bold text-blue-600">{r.waterNew - r.waterOld}</div>
+                        <div className="text-[10px] text-slate-400">{r.waterOld} → {r.waterNew}</div>
+                      </td>
+                      <td className="p-5 text-center">
+                        {r.bill ? (
+                          <Link href={`/bills/${r.bill.id}`} className="inline-flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full text-[10px] font-black uppercase">
+                            <FileText size={12} /> Đã xuất bill
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400 bg-slate-50 px-3 py-1 rounded-full text-[10px] font-black uppercase">Chờ xuất</span>
+                        )}
+                      </td>
+                      <td className="p-5 text-right space-x-2">
+                        <Link href={`/meter-readings/${r.id}`} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                          <Edit3 size={16} />
+                        </Link>
+                        <button onClick={() => handleRecreateBill(r.id)} className="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-slate-50 text-slate-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm">
+                          <RotateCcw size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

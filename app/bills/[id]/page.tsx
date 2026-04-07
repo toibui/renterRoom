@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { ArrowLeft, Printer, CheckCircle, XCircle, Share2 } from 'lucide-react';
 
 export default function BillDetailPage() {
   const { id } = useParams();
@@ -34,136 +35,145 @@ export default function BillDetailPage() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center text-slate-500 font-medium">Đang tải hóa đơn...</div>;
-  if (!bill) return <div className="p-10 text-center">Không tìm thấy dữ liệu.</div>;
+  if (loading) return <div className="p-10 text-center text-slate-500 font-medium animate-pulse">Đang tải hóa đơn...</div>;
+  if (!bill) return <div className="p-10 text-center text-rose-500 font-bold">Không tìm thấy dữ liệu.</div>;
 
   const electricUsage = bill.meterReading.electricNew - bill.meterReading.electricOld;
   const waterUsage = bill.meterReading.waterNew - bill.meterReading.waterOld;
 
   return (
-    <div className="min-h-screen bg-slate-50 p-4 md:p-12">
-      {/* Thanh công cụ (Ẩn khi in) */}
-      <div className="max-w-3xl mx-auto mb-6 flex justify-between items-center no-print">
-        <button onClick={() => router.back()} className="text-slate-500 font-bold flex items-center gap-2 hover:text-slate-800">
-          ← Quay lại
+    <div className="min-h-screen bg-slate-100 md:p-8 pb-20">
+      {/* TOOLBAR MOBILE & DESKTOP */}
+      <div className="max-w-2xl mx-auto mb-4 p-4 md:p-0 flex justify-between items-center no-print">
+        <button onClick={() => router.back()} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-600">
+          <ArrowLeft size={20} />
         </button>
-        <div className="flex gap-3">
+        
+        <div className="flex gap-2">
           <button 
             onClick={handleTogglePaid}
-            className={`px-6 py-2 rounded-full font-bold text-sm shadow-sm transition-all ${
-              bill.status === 'PAID' ? 'bg-slate-200 text-slate-600' : 'bg-emerald-600 text-white hover:bg-emerald-700'
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs shadow-md transition-all ${
+              bill.status === 'PAID' ? 'bg-amber-500 text-white' : 'bg-emerald-600 text-white'
             }`}
           >
-            {bill.status === 'PAID' ? 'Chuyển thành Chưa trả' : 'Xác nhận Đã trả tiền'}
+            {bill.status === 'PAID' ? <XCircle size={16}/> : <CheckCircle size={16}/>}
+            <span className="hidden sm:inline">{bill.status === 'PAID' ? 'Hủy xác nhận' : 'Xác nhận thu'}</span>
           </button>
+          
           <button 
             onClick={() => window.print()}
-            className="bg-slate-900 text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-black"
+            className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center shadow-md"
+            title="In hóa đơn"
           >
-            In Hóa đơn (PDF)
+            <Printer size={18} />
           </button>
         </div>
       </div>
 
-      {/* Tờ Hóa Đơn */}
-      <div className="max-w-3xl mx-auto bg-white shadow-2xl rounded-sm overflow-hidden border border-slate-200" id="bill-content">
-        <div className="p-12">
+      {/* TỜ HÓA ĐƠN CHÍNH */}
+      <div className="max-w-2xl mx-auto bg-white shadow-xl md:rounded-2xl overflow-hidden border border-slate-200" id="bill-content">
+        <div className="p-6 md:p-12">
           {/* Header */}
-          <div className="flex justify-between items-start border-b-2 border-slate-900 pb-8 mb-8">
-            <div>
-              <h1 className="text-4xl font-black tracking-tighter text-slate-900">PHIẾU THU TIỀN NHÀ</h1>
-              <p className="text-slate-500 mt-1 uppercase font-bold tracking-widest text-xs">
-                Tháng {bill.meterReading.month} / Năm {bill.meterReading.year}
-              </p>
-            </div>
-            <div className="text-right">
-              <div className={`inline-block px-4 py-1 rounded-md text-xs font-black mb-2 ${
-                bill.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+          <div className="text-center border-b-2 border-slate-100 pb-6 mb-6">
+            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">PHIẾU THU TIỀN NHÀ</h1>
+            <div className="flex items-center justify-center gap-2 mt-2">
+               <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                 Tháng {bill.meterReading.month} / {bill.meterReading.year}
+               </span>
+               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                bill.status === 'PAID' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
               }`}>
-                {bill.status === 'PAID' ? 'ĐÃ THANH TOÁN' : 'CHỜ THANH TOÁN'}
-              </div>
-              <p className="font-black text-xl text-slate-800">Phòng {bill.room.roomNumber}</p>
-              <p className="text-slate-500 text-sm">{bill.room.tenantName || 'Khách thuê'}</p>
-            </div>
-          </div>
-
-          {/* Bảng chi tiết */}
-          <table className="w-full mb-8">
-            <thead>
-              <tr className="text-slate-400 text-[10px] uppercase font-black border-b">
-                <th className="py-4 text-left">Nội dung thanh toán</th>
-                <th className="py-4 text-right">Chỉ số</th>
-                <th className="py-4 text-right">Đơn giá</th>
-                <th className="py-4 text-right">Thành tiền</th>
-              </tr>
-            </thead>
-            <tbody className="text-slate-700 font-medium divide-y divide-slate-100">
-              <tr>
-                <td className="py-5">Tiền thuê phòng</td>
-                <td className="py-5 text-right">-</td>
-                <td className="py-5 text-right">{bill.appliedBasePrice.toLocaleString()}</td>
-                <td className="py-5 text-right font-bold text-slate-900">{bill.appliedBasePrice.toLocaleString()}đ</td>
-              </tr>
-              <tr>
-                <td className="py-5">
-                  <span>Tiền Điện</span>
-                  <div className="text-[10px] text-slate-400 mt-1 uppercase tracking-tighter">
-                    Số mới: {bill.meterReading.electricNew} - Số cũ: {bill.meterReading.electricOld}
-                  </div>
-                </td>
-                <td className="py-5 text-right">{electricUsage} kWh</td>
-                <td className="py-5 text-right">{bill.appliedElectricPrice.toLocaleString()}</td>
-                <td className="py-5 text-right font-bold text-slate-900">{(electricUsage * bill.appliedElectricPrice).toLocaleString()}đ</td>
-              </tr>
-              <tr>
-                <td className="py-5">
-                  <span>Tiền Nước</span>
-                  <div className="text-[10px] text-slate-400 mt-1 uppercase tracking-tighter">
-                    Số mới: {bill.meterReading.waterNew} - Số cũ: {bill.meterReading.waterOld}
-                  </div>
-                </td>
-                <td className="py-5 text-right">{waterUsage} m³</td>
-                <td className="py-5 text-right">{bill.appliedWaterPrice.toLocaleString()}</td>
-                <td className="py-5 text-right font-bold text-slate-900">{(waterUsage * bill.appliedWaterPrice).toLocaleString()}đ</td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Tổng tiền */}
-          <div className="bg-slate-50 p-8 rounded-xl flex justify-between items-center border border-slate-100">
-            <div>
-              <p className="text-xs font-black text-slate-400 uppercase">Tổng cộng tiền nhà</p>
-              <p className="text-[10px] text-slate-400 italic font-medium mt-1">
-                (Bằng chữ: Một triệu hai trăm nghìn đồng...)
-              </p>
-            </div>
-            <div className="text-right">
-              <span className="text-4xl font-black text-indigo-600 leading-none">
-                {bill.totalAmount.toLocaleString()}đ
+                {bill.status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
               </span>
             </div>
           </div>
 
-          {/* Ký tên */}
-          <div className="grid grid-cols-2 gap-8 mt-12 text-center">
-            <div className="space-y-16">
-              <p className="text-xs font-bold uppercase text-slate-400">Người thuê</p>
-              <div className="h-1 w-24 border-b border-slate-200 mx-auto opacity-50"></div>
+          {/* Thông tin khách hàng */}
+          <div className="grid grid-cols-2 gap-4 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phòng</p>
+              <p className="text-lg font-black text-slate-900">{bill.room.roomNumber}</p>
             </div>
-            <div className="space-y-16">
-              <p className="text-xs font-bold uppercase text-slate-400">Người lập phiếu</p>
-              <p className="font-black text-slate-800 uppercase tracking-tighter text-sm">Chủ nhà</p>
+            <div className="text-right">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Khách thuê</p>
+              <p className="text-lg font-bold text-slate-900 truncate">{bill.room.tenantName || 'N/A'}</p>
             </div>
+          </div>
+
+          {/* Danh sách dịch vụ - Tối ưu Mobile */}
+          <div className="space-y-4 mb-8">
+             <div className="flex justify-between items-center pb-2 border-b border-slate-50">
+                <span className="text-xs font-bold text-slate-500 uppercase">Nội dung</span>
+                <span className="text-xs font-bold text-slate-500 uppercase">Thành tiền</span>
+             </div>
+             
+             {/* Mục Tiền phòng */}
+             <div className="flex justify-between items-start py-2">
+                <div>
+                  <p className="font-bold text-slate-800 text-sm">Tiền thuê phòng</p>
+                  <p className="text-[10px] text-slate-400">Giá gốc: {bill.appliedBasePrice.toLocaleString()}đ</p>
+                </div>
+                <p className="font-black text-slate-900">{bill.appliedBasePrice.toLocaleString()}đ</p>
+             </div>
+
+             {/* Mục Tiền Điện */}
+             <div className="flex justify-between items-start py-2">
+                <div>
+                  <p className="font-bold text-slate-800 text-sm italic">⚡ Tiền Điện</p>
+                  <p className="text-[10px] text-slate-400">
+                    ({bill.meterReading.electricNew} - {bill.meterReading.electricOld}) × {bill.appliedElectricPrice.toLocaleString()}đ
+                  </p>
+                </div>
+                <p className="font-black text-slate-900">{(electricUsage * bill.appliedElectricPrice).toLocaleString()}đ</p>
+             </div>
+
+             {/* Mục Tiền Nước */}
+             <div className="flex justify-between items-start py-2">
+                <div>
+                  <p className="font-bold text-slate-800 text-sm italic">💧 Tiền Nước</p>
+                  <p className="text-[10px] text-slate-400">
+                    ({bill.meterReading.waterNew} - {bill.meterReading.waterOld}) × {bill.appliedWaterPrice.toLocaleString()}đ
+                  </p>
+                </div>
+                <p className="font-black text-slate-900">{(waterUsage * bill.appliedWaterPrice).toLocaleString()}đ</p>
+             </div>
+          </div>
+
+          {/* Tổng tiền */}
+          <div className="bg-indigo-600 p-6 rounded-3xl text-white text-center shadow-lg shadow-indigo-100">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">Tổng cộng cần thanh toán</p>
+            <p className="text-3xl font-black leading-none">{bill.totalAmount.toLocaleString()}đ</p>
+            <p className="text-[10px] italic mt-3 opacity-70">
+              Cảm ơn quý khách đã thanh toán đúng hạn!
+            </p>
+          </div>
+
+          {/* Ký tên - Tối giản cho mobile */}
+          <div className="flex justify-between items-center mt-10 px-4">
+             <div className="text-center flex-1">
+                <div className="w-12 h-1 border-b border-slate-200 mx-auto mb-2 opacity-50"></div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Người thuê</p>
+             </div>
+             <div className="text-center flex-1">
+                <p className="font-black text-slate-800 uppercase text-xs mb-1 italic">HOME MANAGER</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Người lập phiếu</p>
+             </div>
           </div>
         </div>
       </div>
       
-      {/* CSS dành riêng cho in ấn */}
+      {/* Nút share nhanh trên mobile */}
+      <button className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-white text-blue-600 rounded-full shadow-2xl flex items-center justify-center border border-slate-100 active:scale-90 transition-all no-print">
+        <Share2 size={24} />
+      </button>
+
       <style jsx global>{`
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; padding: 0 !important; }
-          .max-w-3xl { max-width: 100% !important; border: none !important; box-shadow: none !important; }
+          body { background: white !important; }
+          .min-h-screen { min-height: auto !important; padding: 0 !important; }
+          .max-w-2xl { max-width: 100% !important; border: none !important; box-shadow: none !important; }
+          .rounded-2xl, .rounded-3xl { border-radius: 0 !important; }
         }
       `}</style>
     </div>
