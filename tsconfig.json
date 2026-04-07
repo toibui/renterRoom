@@ -12,6 +12,7 @@
       // Nếu code nằm ở root: "@/*": ["./*"]
       "@/*": ["./*"]
     },
+    
     "lib": [
       "dom",
       "dom.iterable",
@@ -39,6 +40,7 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "app/**/*.css",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
   ],
