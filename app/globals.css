@@ -1,42 +1,18 @@
-/* ĐƯA DÒNG NÀY LÊN ĐẦU TIÊN CỦA FILE */
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
-
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
-  --fb-bg: #f0f2f5;
-  --fb-white: #ffffff;
+  --header-height: 60px;
+  --tabbar-height: 70px;
 }
 
-body {
-  background-color: var(--fb-bg);
-  color: #1c1e21;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* Ngăn chặn cuộn ngang và tối ưu cảm ứng trên mobile */
+html, body {
   overflow-x: hidden;
+  height: 100%;
+  overscroll-behavior-y: contain; /* Ngăn chặn pull-to-refresh ngoài ý muốn */
 }
 
-/* Sửa lỗi hiển thị trên iPhone/Android */
-input, button {
-  outline: none !important;
-}
-
-/* Hiệu ứng mượt khi chạm */
-.active-scale {
-  transition: transform 0.1s ease;
-}
-.active-scale:active {
-  transform: scale(0.96);
-}
-
-/* Tùy chỉnh thanh cuộn ẩn */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+/* Vùng an toàn cho nội dung trên mobile */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }

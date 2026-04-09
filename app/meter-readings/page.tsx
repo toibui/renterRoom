@@ -55,7 +55,7 @@ export default function MeterReadingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20 md:pb-10">
+    <div className="min-h-screen bg-slate-50 pb-20 pt-20 md:pb-10">
       {/* HEADER CỐ ĐỊNH TRÊN MOBILE */}
       <div className="sticky top-0 z-20 bg-white border-b border-slate-200 px-4 py-4 md:px-8">
         <div className="max-w-7xl mx-auto flex justify-between items-center">

@@ -100,14 +100,6 @@ export default function Home() {
 
       {/* ===== QUICK STATS ===== */}
       <section className="py-16 md:py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          {/* Mobile: 1 cột hoặc 2 cột tùy độ dài text, ở đây chọn sm:grid-cols-3 */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-10 md:gap-12 text-center">
-            <StatItem value="25" label="Phòng đang quản lý" />
-            <StatItem value="100%" label="Chỉ số chính xác" />
-            <StatItem value="< 1p" label="Thời gian tạo hóa đơn" />
-          </div>
-        </div>
       </section>
 
       {/* ===== FOOTER ===== */}
