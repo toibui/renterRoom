@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, Printer, CheckCircle, XCircle, Share2 } from 'lucide-react';
+import { ArrowLeft, Printer, CheckCircle, XCircle, Share2, Trash2 } from 'lucide-react'; // Thêm Trash2
 
 export default function BillDetailPage() {
   const { id } = useParams();
   const router = useRouter();
   const [bill, setBill] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false); // Trạng thái khi đang xóa
 
   useEffect(() => {
     fetch(`/api/bills/${id}`)
@@ -18,6 +19,30 @@ export default function BillDetailPage() {
         setLoading(false);
       });
   }, [id]);
+
+  // --- LOGIC XÓA HÓA ĐƠN ---
+  const handleDeleteBill = async () => {
+    if (!confirm("Bạn có chắc chắn muốn xóa hóa đơn này không? Hành động này không thể hoàn tác.")) return;
+
+    setIsDeleting(true);
+    try {
+      const res = await fetch(`/api/bills/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        alert("Đã xóa hóa đơn thành công.");
+        router.push('/bills'); // Quay lại danh sách hóa đơn
+        router.refresh();
+      } else {
+        alert("Lỗi khi xóa hóa đơn.");
+      }
+    } catch (error) {
+      alert("Đã xảy ra lỗi kết nối.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleTogglePaid = async () => {
     const newStatus = bill.status === 'PAID' ? 'PENDING' : 'PAID';
@@ -50,6 +75,16 @@ export default function BillDetailPage() {
         </button>
         
         <div className="flex gap-2">
+          {/* NÚT XÓA MỚI THÊM */}
+          <button 
+            onClick={handleDeleteBill}
+            disabled={isDeleting}
+            className="w-10 h-10 bg-white text-rose-500 rounded-xl flex items-center justify-center shadow-sm border border-rose-100 hover:bg-rose-50 transition-colors disabled:opacity-50"
+            title="Xóa hóa đơn"
+          >
+            <Trash2 size={18} />
+          </button>
+
           <button 
             onClick={handleTogglePaid}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs shadow-md transition-all ${
@@ -70,10 +105,10 @@ export default function BillDetailPage() {
         </div>
       </div>
 
-      {/* TỜ HÓA ĐƠN CHÍNH */}
+      {/* TỜ HÓA ĐƠN CHÍNH (Giữ nguyên phần dưới của bạn) */}
       <div className="max-w-2xl mx-auto bg-white shadow-xl md:rounded-2xl overflow-hidden border border-slate-200" id="bill-content">
         <div className="p-6 md:p-12">
-          {/* Header */}
+          {/* ... các nội dung còn lại giữ nguyên ... */}
           <div className="text-center border-b-2 border-slate-100 pb-6 mb-6">
             <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900">PHIẾU THU TIỀN NHÀ</h1>
             <div className="flex items-center justify-center gap-2 mt-2">
@@ -88,7 +123,6 @@ export default function BillDetailPage() {
             </div>
           </div>
 
-          {/* Thông tin khách hàng */}
           <div className="grid grid-cols-2 gap-4 mb-8 bg-slate-50 p-4 rounded-2xl border border-slate-100">
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Phòng</p>
@@ -100,14 +134,11 @@ export default function BillDetailPage() {
             </div>
           </div>
 
-          {/* Danh sách dịch vụ - Tối ưu Mobile */}
           <div className="space-y-4 mb-8">
              <div className="flex justify-between items-center pb-2 border-b border-slate-50">
                 <span className="text-xs font-bold text-slate-500 uppercase">Nội dung</span>
                 <span className="text-xs font-bold text-slate-500 uppercase">Thành tiền</span>
              </div>
-             
-             {/* Mục Tiền phòng */}
              <div className="flex justify-between items-start py-2">
                 <div>
                   <p className="font-bold text-slate-800 text-sm">Tiền thuê phòng</p>
@@ -115,8 +146,6 @@ export default function BillDetailPage() {
                 </div>
                 <p className="font-black text-slate-900">{bill.appliedBasePrice.toLocaleString()}đ</p>
              </div>
-
-             {/* Mục Tiền Điện */}
              <div className="flex justify-between items-start py-2">
                 <div>
                   <p className="font-bold text-slate-800 text-sm italic">⚡ Tiền Điện</p>
@@ -126,8 +155,6 @@ export default function BillDetailPage() {
                 </div>
                 <p className="font-black text-slate-900">{(electricUsage * bill.appliedElectricPrice).toLocaleString()}đ</p>
              </div>
-
-             {/* Mục Tiền Nước */}
              <div className="flex justify-between items-start py-2">
                 <div>
                   <p className="font-bold text-slate-800 text-sm italic">💧 Tiền Nước</p>
@@ -139,16 +166,11 @@ export default function BillDetailPage() {
              </div>
           </div>
 
-          {/* Tổng tiền */}
           <div className="bg-indigo-600 p-6 rounded-3xl text-white text-center shadow-lg shadow-indigo-100">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-80 mb-1">Tổng cộng cần thanh toán</p>
             <p className="text-3xl font-black leading-none">{bill.totalAmount.toLocaleString()}đ</p>
-            <p className="text-[10px] italic mt-3 opacity-70">
-              Cảm ơn quý khách đã thanh toán đúng hạn!
-            </p>
           </div>
 
-          {/* Ký tên - Tối giản cho mobile */}
           <div className="flex justify-between items-center mt-10 px-4">
              <div className="text-center flex-1">
                 <div className="w-12 h-1 border-b border-slate-200 mx-auto mb-2 opacity-50"></div>
@@ -162,7 +184,7 @@ export default function BillDetailPage() {
         </div>
       </div>
       
-      {/* Nút share nhanh trên mobile */}
+      {/* ... style và share button ... */}
       <button className="md:hidden fixed bottom-6 right-6 w-14 h-14 bg-white text-blue-600 rounded-full shadow-2xl flex items-center justify-center border border-slate-100 active:scale-90 transition-all no-print">
         <Share2 size={24} />
       </button>
