@@ -1,0 +1,95 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PAID
+}
+
+model User {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rooms     Room[]
+}
+
+model Room {
+  id          String    @id @default(uuid())
+  roomNumber  String    @unique
+  rentPrice   Float
+  accessToken String    @unique @default(uuid())
+  userId      String?
+  user        User?     @relation(fields: [userId], references: [id])
+  tenants     Tenant[]
+  invoices    Invoice[]
+  assets      Asset[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Tenant {
+  id             String   @id @default(uuid())
+  fullName       String
+  phone          String
+  identityCard   String
+  isPrimary      Boolean  @default(false)
+  frontCccdUrl   String?
+  backCccdUrl    String?
+  isTemporaryReg Boolean  @default(false)
+  isArchived     Boolean  @default(false)
+  archivedAt     DateTime?
+  roomId         String
+  room           Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Invoice {
+  id             String        @id @default(uuid())
+  monthYear      String
+  oldElectric    Int
+  newElectric    Int
+  electricPrice  Float
+  oldWater       Int
+  newWater       Int
+  waterPrice     Float
+  totalAmount    Float
+  status         InvoiceStatus @default(UNPAID)
+  roomId         String
+  room           Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([roomId, monthYear])
+}
+
+model Asset {
+  id        String   @id @default(uuid())
+  name      String
+  code      String?
+  status    String
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PropertyInfo {
+  id          String   @id @default("main")
+  landlordName String
+  phone       String
+  houseNumber String
+  address     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
