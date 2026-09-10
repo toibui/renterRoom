@@ -37,9 +37,12 @@ export default function TenantPage({ params }: { params: { token: string } }) {
   const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
   const [formMode, setFormMode] = useState<'primary' | 'companion' | 'replace' | 'edit'>('primary');
   const [formMessage, setFormMessage] = useState('');
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const [origin, setOrigin] = useState('');
   const [formData, setFormData] = useState({ fullName: '', phone: '', identityCard: '' });
 
   useEffect(() => {
+    setOrigin(window.location.origin);
     const loadRoom = async () => {
       try {
         const res = await fetch(`/api/tenant/${params.token}`);
@@ -56,7 +59,8 @@ export default function TenantPage({ params }: { params: { token: string } }) {
         };
         setData(room);
         setProperty(result.property ?? null);
-        setSelectedInvoiceId(room.invoices[0]?.id ?? '');
+        const invoiceFromUrl = new URLSearchParams(window.location.search).get('invoice');
+        setSelectedInvoiceId(room.invoices.some((item: Invoice) => item.id === invoiceFromUrl) ? invoiceFromUrl ?? '' : room.invoices[0]?.id ?? '');
       } catch (loadError) {
         setError(loadError instanceof Error ? loadError.message : 'Không thể tải thông tin phòng.');
       } finally {
@@ -122,10 +126,33 @@ export default function TenantPage({ params }: { params: { token: string } }) {
   const bankId = process.env.NEXT_PUBLIC_VIETQR_BANK_ID || 'MB';
   const accountNo = process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NO || '0987654321';
   const accountName = process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NAME || 'CHUNHA';
+  const transferDescription = invoice ? `P${data.roomNumber} T${invoice.monthYear}` : '';
 
   const qrUrl = invoice
-    ? `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${invoice.totalAmount}&addInfo=P${data.roomNumber}%20T${invoice.monthYear}&accountName=${encodeURIComponent(accountName)}`
+    ? `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${invoice.totalAmount}&addInfo=${encodeURIComponent(transferDescription)}&accountName=${encodeURIComponent(accountName)}`
     : '';
+  const bankPaymentLink = invoice
+    ? `https://dl.vietqr.io/pay?ba=${encodeURIComponent(`${accountNo}@${bankId}`)}&am=${invoice.totalAmount}&tn=${encodeURIComponent(transferDescription)}`
+    : '';
+  const shareLink = invoice
+    ? `${origin}/phong/${params.token}?invoice=${encodeURIComponent(invoice.id)}`
+    : `${origin}/phong/${params.token}`;
+
+  const sharePaymentLink = async () => {
+    setPaymentMessage('');
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: `Thanh toán phòng ${data.roomNumber}`, text: `Hóa đơn tháng ${invoice?.monthYear ?? ''}`, url: shareLink });
+        setPaymentMessage('Đã mở bảng chia sẻ.');
+      } else {
+        await navigator.clipboard.writeText(shareLink);
+        setPaymentMessage('Đã sao chép link thanh toán. Bạn có thể dán vào Zalo.');
+      }
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return;
+      setPaymentMessage('Không thể chia sẻ tự động. Hãy sao chép link trên thanh địa chỉ.');
+    }
+  };
 
   return (
     <div className="p-4 space-y-5 max-w-2xl mx-auto">
@@ -177,8 +204,14 @@ export default function TenantPage({ params }: { params: { token: string } }) {
             </div>
             {invoice.status === 'UNPAID' && (
               <div className="border-t border-slate-100 p-4 text-center">
-                <p className="mb-2 text-[11px] text-slate-500">Quét mã VietQR để thanh toán</p>
-                <img src={qrUrl} alt={`Mã QR thanh toán tháng ${invoice.monthYear}`} className="mx-auto h-44 w-44 rounded-xl border shadow-sm" />
+                <p className="mb-2 text-[11px] text-slate-500">Chạm vào mã hoặc nút bên dưới để mở ứng dụng ngân hàng</p>
+                <a href={bankPaymentLink} aria-label={`Mở ứng dụng ngân hàng để thanh toán tháng ${invoice.monthYear}`}>
+                  <img src={qrUrl} alt={`Mã QR thanh toán tháng ${invoice.monthYear}`} className="mx-auto h-44 w-44 rounded-xl border shadow-sm" />
+                </a>
+                <p className="mt-2 text-[11px] text-slate-500">Nội dung: <span className="font-bold text-slate-700">{transferDescription}</span></p>
+                <a href={bankPaymentLink} className="mt-3 inline-flex rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white shadow-sm">Mở app ngân hàng</a>
+                <button type="button" onClick={sharePaymentLink} className="ml-2 mt-3 inline-flex rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700">Gửi link qua Zalo</button>
+                {paymentMessage && <p className="mt-2 text-xs font-semibold text-emerald-700" role="status">{paymentMessage}</p>}
               </div>
             )}
           </div>
