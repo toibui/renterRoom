@@ -9,7 +9,8 @@ export async function GET(req: Request) {
 
     const latestInvoice = await prisma.invoice.findFirst({
       where: { roomId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { updatedAt: 'desc' },
+      select: { newElectric: true, newWater: true },
     });
 
     return NextResponse.json({
@@ -17,6 +18,6 @@ export async function GET(req: Request) {
       oldWater: latestInvoice ? latestInvoice.newWater : 0,
     });
   } catch (error) {
-    return NextResponse.json({ oldElectric: 0, oldWater: 0 });
+    return NextResponse.json({ error: 'Lỗi lấy chỉ số điện nước gần nhất' }, { status: 500 });
   }
 }

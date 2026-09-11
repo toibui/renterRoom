@@ -88,9 +88,21 @@ export default function ElectricWaterPage() {
 
   const handleRoomChange = async (roomId: string) => {
     setSelectedRoomId(roomId);
-    if (!roomId) return;
+    if (!roomId) {
+      setOldElectric(0);
+      setNewElectric(0);
+      setOldWater(0);
+      setNewWater(0);
+      return;
+    }
+
     const res = await fetch(`/api/admin/electric-water/latest?roomId=${roomId}`);
     const data = await res.json();
+    if (!res.ok) {
+      setMessage({ text: data.error || 'Không thể tải chỉ số cũ.', type: 'error' });
+      return;
+    }
+
     setOldElectric(data.oldElectric || 0);
     setNewElectric(data.oldElectric || 0);
     setOldWater(data.oldWater || 0);
