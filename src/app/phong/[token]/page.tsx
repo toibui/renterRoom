@@ -6,8 +6,10 @@ type Invoice = {
   monthYear: string;
   oldElectric: number;
   newElectric: number;
+  electricPrice: number;
   oldWater: number;
   newWater: number;
+  waterPrice: number;
   totalAmount: number;
   status: 'UNPAID' | 'PAID';
 };
@@ -26,6 +28,9 @@ type PropertyInfo = {
   phone: string;
   houseNumber: string;
   address: string;
+  bankId: string;
+  accountNo: string;
+  accountName: string;
 };
 
 export default function TenantPage({ params }: { params: { token: string } }) {
@@ -38,11 +43,9 @@ export default function TenantPage({ params }: { params: { token: string } }) {
   const [formMode, setFormMode] = useState<'primary' | 'companion' | 'replace' | 'edit'>('primary');
   const [formMessage, setFormMessage] = useState('');
   const [paymentMessage, setPaymentMessage] = useState('');
-  const [origin, setOrigin] = useState('');
   const [formData, setFormData] = useState({ fullName: '', phone: '', identityCard: '' });
 
   useEffect(() => {
-    setOrigin(window.location.origin);
     const loadRoom = async () => {
       try {
         const res = await fetch(`/api/tenant/${params.token}`);
@@ -123,34 +126,47 @@ export default function TenantPage({ params }: { params: { token: string } }) {
   if (!data) return <div className="p-8 text-center text-red-500">Mã phòng không tồn tại.</div>;
 
   const invoice = data.invoices.find((item) => item.id === selectedInvoiceId) ?? data.invoices[0];
-  const bankId = process.env.NEXT_PUBLIC_VIETQR_BANK_ID || 'MB';
-  const accountNo = process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NO || '0987654321';
-  const accountName = process.env.NEXT_PUBLIC_VIETQR_ACCOUNT_NAME || 'CHUNHA';
+  const bankId = property?.bankId || '';
+  const accountNo = property?.accountNo || '';
+  const accountName = property?.accountName || '';
   const transferDescription = invoice ? `P${data.roomNumber} T${invoice.monthYear}` : '';
 
-  const qrUrl = invoice
+  const qrUrl = invoice && bankId && accountNo && accountName
     ? `https://img.vietqr.io/image/${bankId}-${accountNo}-compact2.png?amount=${invoice.totalAmount}&addInfo=${encodeURIComponent(transferDescription)}&accountName=${encodeURIComponent(accountName)}`
     : '';
-  const bankPaymentLink = invoice
-    ? `https://dl.vietqr.io/pay?ba=${encodeURIComponent(`${accountNo}@${bankId}`)}&am=${invoice.totalAmount}&tn=${encodeURIComponent(transferDescription)}`
-    : '';
-  const shareLink = invoice
-    ? `${origin}/phong/${params.token}?invoice=${encodeURIComponent(invoice.id)}`
-    : `${origin}/phong/${params.token}`;
 
-  const sharePaymentLink = async () => {
+  const copyQrImage = async () => {
     setPaymentMessage('');
     try {
-      if (navigator.share) {
-        await navigator.share({ title: `Thanh toán phòng ${data.roomNumber}`, text: `Hóa đơn tháng ${invoice?.monthYear ?? ''}`, url: shareLink });
-        setPaymentMessage('Đã mở bảng chia sẻ.');
-      } else {
-        await navigator.clipboard.writeText(shareLink);
-        setPaymentMessage('Đã sao chép link thanh toán. Bạn có thể dán vào Zalo.');
+      if (!navigator.clipboard?.write || typeof ClipboardItem === 'undefined') {
+        throw new Error('Trình duyệt không hỗ trợ sao chép ảnh.');
       }
+
+      const response = await fetch(qrUrl);
+      if (!response.ok) throw new Error('Không thể tải ảnh QR.');
+      const blob = await response.blob();
+      await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
+      setPaymentMessage('Đã sao chép ảnh QR. Bạn có thể dán ảnh vào Zalo.');
+    } catch {
+      setPaymentMessage('Không thể sao chép ảnh QR trên trình duyệt này. Bạn có thể nhấn giữ ảnh để tải xuống rồi gửi qua Zalo.');
+    }
+  };
+
+  const shareQrImage = async () => {
+    setPaymentMessage('');
+    try {
+      if (!navigator.share || !navigator.canShare) throw new Error('Trình duyệt không hỗ trợ chia sẻ ảnh.');
+
+      const response = await fetch(qrUrl);
+      if (!response.ok) throw new Error('Không thể tải ảnh QR.');
+      const blob = await response.blob();
+      const file = new File([blob], `qr-phong-${data.roomNumber}-${invoice?.monthYear ?? ''}.png`, { type: blob.type || 'image/png' });
+      if (!navigator.canShare({ files: [file] })) throw new Error('Không thể chia sẻ ảnh QR.');
+      await navigator.share({ files: [file], title: `QR thanh toán phòng ${data.roomNumber}` });
+      setPaymentMessage('Đã mở bảng chia sẻ ảnh QR. Chọn Zalo để gửi ảnh.');
     } catch (shareError) {
       if (shareError instanceof DOMException && shareError.name === 'AbortError') return;
-      setPaymentMessage('Không thể chia sẻ tự động. Hãy sao chép link trên thanh địa chỉ.');
+      setPaymentMessage('Không thể chia sẻ ảnh QR. Hãy dùng nút sao chép ảnh hoặc tải ảnh xuống.');
     }
   };
 
@@ -198,19 +214,23 @@ export default function TenantPage({ params }: { params: { token: string } }) {
             </div>
             <div className="space-y-2 p-4 text-xs text-slate-600">
               <div className="flex justify-between"><span>Tiền phòng</span><span className="font-semibold">{data.rentPrice.toLocaleString()} VNĐ</span></div>
-              <div className="flex justify-between"><span>Điện ({invoice.oldElectric} → {invoice.newElectric})</span><span>{(invoice.newElectric - invoice.oldElectric).toLocaleString()} kWh</span></div>
-              <div className="flex justify-between"><span>Nước ({invoice.oldWater} → {invoice.newWater})</span><span>{(invoice.newWater - invoice.oldWater).toLocaleString()} m³</span></div>
+              <div className="flex items-start justify-between gap-4"><span>Điện ({invoice.oldElectric} → {invoice.newElectric})</span><span className="text-right">{(invoice.newElectric - invoice.oldElectric).toLocaleString()} kWh × {invoice.electricPrice.toLocaleString()}<br /><strong className="text-slate-800">{((invoice.newElectric - invoice.oldElectric) * invoice.electricPrice).toLocaleString()} VNĐ</strong></span></div>
+              <div className="flex items-start justify-between gap-4"><span>Nước ({invoice.oldWater} → {invoice.newWater})</span><span className="text-right">{(invoice.newWater - invoice.oldWater).toLocaleString()} m³ × {invoice.waterPrice.toLocaleString()}<br /><strong className="text-slate-800">{((invoice.newWater - invoice.oldWater) * invoice.waterPrice).toLocaleString()} VNĐ</strong></span></div>
               <div className="mt-3 flex justify-between border-t border-slate-100 pt-3 text-sm font-black text-slate-900"><span>Tổng thanh toán</span><span className="text-cyan-600">{invoice.totalAmount.toLocaleString()} VNĐ</span></div>
             </div>
             {invoice.status === 'UNPAID' && (
               <div className="border-t border-slate-100 p-4 text-center">
-                <p className="mb-2 text-[11px] text-slate-500">Chạm vào mã hoặc nút bên dưới để mở ứng dụng ngân hàng</p>
-                <a href={bankPaymentLink} aria-label={`Mở ứng dụng ngân hàng để thanh toán tháng ${invoice.monthYear}`}>
-                  <img src={qrUrl} alt={`Mã QR thanh toán tháng ${invoice.monthYear}`} className="mx-auto h-44 w-44 rounded-xl border shadow-sm" />
-                </a>
-                <p className="mt-2 text-[11px] text-slate-500">Nội dung: <span className="font-bold text-slate-700">{transferDescription}</span></p>
-                <a href={bankPaymentLink} className="mt-3 inline-flex rounded-xl bg-cyan-600 px-4 py-2 text-xs font-bold text-white shadow-sm">Mở app ngân hàng</a>
-                <button type="button" onClick={sharePaymentLink} className="ml-2 mt-3 inline-flex rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700">Gửi link qua Zalo</button>
+                {qrUrl ? (
+                  <>
+                    <p className="mb-2 text-[11px] text-slate-500">Gửi ảnh QR này qua Zalo để người nhận quét bằng app ngân hàng</p>
+                    <img src={qrUrl} alt={`Mã QR thanh toán tháng ${invoice.monthYear}`} className="mx-auto h-44 w-44 rounded-xl border shadow-sm" />
+                    <p className="mt-2 text-[11px] text-slate-500">Nội dung: <span className="font-bold text-slate-700">{transferDescription}</span></p>
+                    <button type="button" onClick={copyQrImage} className="ml-2 mt-3 inline-flex rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700">Sao chép ảnh QR</button>
+                    <button type="button" onClick={shareQrImage} className="ml-2 mt-3 inline-flex rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700">Gửi ảnh qua Zalo</button>
+                  </>
+                ) : (
+                  <p className="text-xs font-semibold text-amber-700">Chủ nhà chưa cấu hình thông tin nhận chuyển khoản.</p>
+                )}
                 {paymentMessage && <p className="mt-2 text-xs font-semibold text-emerald-700" role="status">{paymentMessage}</p>}
               </div>
             )}

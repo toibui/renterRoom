@@ -41,8 +41,8 @@ export default function InvoicesPage() {
                 <span className="text-xs text-slate-500">Kỳ {inv.monthYear}</span>
               </div>
               <div className="text-xs text-slate-600 space-y-1">
-                <div className="flex justify-between"><span>Điện dùng:</span><span>{inv.newElectric - inv.oldElectric} kWh</span></div>
-                <div className="flex justify-between"><span>Nước dùng:</span><span>{inv.newWater - inv.oldWater} m³</span></div>
+                <div className="flex justify-between gap-4"><span>Điện ({inv.oldElectric} → {inv.newElectric})</span><span className="text-right">{(inv.newElectric - inv.oldElectric).toLocaleString()} kWh × {inv.electricPrice.toLocaleString()}<br /><strong className="text-slate-800">{((inv.newElectric - inv.oldElectric) * inv.electricPrice).toLocaleString()} VNĐ</strong></span></div>
+                <div className="flex justify-between gap-4"><span>Nước ({inv.oldWater} → {inv.newWater})</span><span className="text-right">{(inv.newWater - inv.oldWater).toLocaleString()} m³ × {inv.waterPrice.toLocaleString()}<br /><strong className="text-slate-800">{((inv.newWater - inv.oldWater) * inv.waterPrice).toLocaleString()} VNĐ</strong></span></div>
                 <div className="flex justify-between font-bold text-sm text-slate-900 border-t pt-1">
                   <span>Tổng thu:</span>
                   <span className="text-blue-600">{inv.totalAmount.toLocaleString()} VNĐ</span>

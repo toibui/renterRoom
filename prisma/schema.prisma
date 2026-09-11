@@ -90,6 +90,11 @@ model PropertyInfo {
   phone       String
   houseNumber String
   address     String
+  bankId      String   @default("")
+  accountNo   String   @default("")
+  accountName String   @default("")
+  electricPrice Float   @default(3500)
+  waterPrice    Float   @default(25000)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
