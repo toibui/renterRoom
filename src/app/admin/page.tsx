@@ -40,6 +40,7 @@ export default function AdminDashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [updatingInvoiceId, setUpdatingInvoiceId] = useState<string | null>(null);
 
   const loadDashboard = async () => {
     setLoading(true);
@@ -68,6 +69,25 @@ export default function AdminDashboardPage() {
   };
 
   useEffect(() => { loadDashboard(); }, []);
+
+  const togglePaymentStatus = async (invoice: Invoice) => {
+    setUpdatingInvoiceId(invoice.id);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/invoices', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoiceId: invoice.id, status: invoice.status === 'PAID' ? 'UNPAID' : 'PAID' }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Không thể cập nhật trạng thái thanh toán.');
+      await loadDashboard();
+    } catch (toggleError) {
+      setError(toggleError instanceof Error ? toggleError.message : 'Không thể cập nhật trạng thái thanh toán.');
+    } finally {
+      setUpdatingInvoiceId(null);
+    }
+  };
 
   const monthInvoices = useMemo(
     () => invoices.filter((invoice) => invoice.monthYear === selectedMonth),
@@ -178,9 +198,15 @@ export default function AdminDashboardPage() {
                       {invoice ? 'Đã chốt' : 'Chưa chốt'}
                     </span>
                     {invoice && (
-                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${invoice.status === 'PAID' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>
+                      <button
+                        type="button"
+                        onClick={() => togglePaymentStatus(invoice)}
+                        disabled={updatingInvoiceId === invoice.id}
+                        title={invoice.status === 'PAID' ? 'Bấm để hủy xác nhận thanh toán' : 'Bấm để xác nhận đã thanh toán'}
+                        className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition hover:opacity-80 disabled:cursor-wait disabled:opacity-60 ${invoice.status === 'PAID' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}
+                      >
                         {invoice.status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                      </span>
+                      </button>
                     )}
                     {invoice ? (
                       <Link href={`/phong/${room.accessToken}?invoice=${invoice.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700">
