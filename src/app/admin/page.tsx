@@ -84,6 +84,8 @@ export default function AdminDashboardPage() {
   const months = useMemo(() => Array.from(new Set(invoices.map((invoice) => invoice.monthYear))), [invoices]);
   const invoiceByRoom = useMemo(() => new Map(monthInvoices.map((invoice) => [invoice.roomId, invoice])), [monthInvoices]);
   const closedCount = monthInvoices.length;
+  const paidCount = monthInvoices.filter((invoice) => invoice.status === 'PAID').length;
+  const unpaidCount = monthInvoices.filter((invoice) => invoice.status === 'UNPAID').length;
 
   return (
     <div className="space-y-5 p-4">
@@ -145,7 +147,7 @@ export default function AdminDashboardPage() {
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
           <div>
             <h2 className="font-black text-slate-900">Tình trạng chốt kỳ {selectedMonth}</h2>
-            <p className="mt-0.5 text-xs text-slate-500">Đã chốt {closedCount}/{rooms.length} phòng</p>
+            <p className="mt-0.5 text-xs text-slate-500">Đã chốt {closedCount}/{rooms.length} phòng · Đã thu {paidCount} · Chưa thu {unpaidCount}</p>
           </div>
           <Link href="/admin/electric-water" className="inline-flex items-center gap-1 rounded-lg bg-teal-50 px-2.5 py-1.5 text-xs font-bold text-teal-700 transition hover:bg-teal-100">
             <Zap size={14} /> Chốt số
@@ -175,6 +177,11 @@ export default function AdminDashboardPage() {
                     <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${invoice ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                       {invoice ? 'Đã chốt' : 'Chưa chốt'}
                     </span>
+                    {invoice && (
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${invoice.status === 'PAID' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700'}`}>
+                        {invoice.status === 'PAID' ? 'Đã thanh toán' : 'Chưa thanh toán'}
+                      </span>
+                    )}
                     {invoice ? (
                       <Link href={`/phong/${room.accessToken}?invoice=${invoice.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700">
                         <FileText size={14} /> Xem hóa đơn <ArrowUpRight size={13} />
