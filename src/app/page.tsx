@@ -16,7 +16,7 @@ export default function HomePage() {
     <div className="min-h-[85vh] flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-xl">
         <div className="text-center space-y-1">
-          <h1 className="text-2xl font-extrabold text-slate-900">Rental Manager</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900">Quản lý nhà trọ</h1>
           <p className="text-xs text-slate-500">Cổng Quản lý & Tra cứu Căn hộ Cho thuê</p>
         </div>
 
@@ -39,7 +39,7 @@ export default function HomePage() {
         <div className="space-y-3 pt-3 border-t border-slate-100 text-center">
           <h2 className="text-sm font-semibold text-slate-700">Dành cho Chủ nhà</h2>
           <Link href="/admin" className="block w-full bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-semibold text-sm transition shadow-sm">
-            Truy cập Trang Quản Trị Admin
+            Truy cập trang quản trị
           </Link>
         </div>
       </div>

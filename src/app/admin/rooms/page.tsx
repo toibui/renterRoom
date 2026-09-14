@@ -47,12 +47,12 @@ export default function RoomsPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Quản Lý Phòng</h1>
+        <h1 className="text-xl font-bold text-slate-900">Quản lý phòng</h1>
         <p className="text-xs text-slate-500">Tạo phòng và lấy link truy cập gửi khách</p>
       </div>
 
       <form onSubmit={handleCreate} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-        <h2 className="text-sm font-bold text-slate-800">Thêm Phòng Mới</h2>
+        <h2 className="text-sm font-bold text-slate-800">Thêm phòng mới</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             type="text"
@@ -72,7 +72,7 @@ export default function RoomsPage() {
           />
         </div>
         <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-bold">
-          Thêm Phòng
+          Thêm phòng
         </button>
       </form>
 
@@ -85,7 +85,7 @@ export default function RoomsPage() {
             </div>
             <div className="flex gap-2">
               <button onClick={() => copyLink(room.accessToken)} className="bg-slate-100 active:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl text-xs font-medium">
-                📋 Copy Link
+                📋 Sao chép liên kết
               </button>
               <button onClick={() => handleDelete(room.id)} className="bg-red-50 text-red-600 px-2.5 py-1.5 rounded-xl text-xs font-medium">
                 Xóa

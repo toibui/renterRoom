@@ -36,7 +36,7 @@ export default function LoginPage() {
     <div className="min-h-[80vh] flex items-center justify-center p-4">
       <div className="w-full max-w-sm bg-white p-6 rounded-2xl border border-slate-200 shadow-xl space-y-4">
         <div className="text-center space-y-1">
-          <h1 className="text-xl font-bold text-slate-900">Đăng Nhập Admin</h1>
+          <h1 className="text-xl font-bold text-slate-900">Đăng nhập quản trị</h1>
           <p className="text-xs text-slate-500">Quản lý hệ thống nhà trọ</p>
         </div>
 
@@ -76,7 +76,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-sm disabled:opacity-50"
           >
-            {loading ? 'Đang xác thực...' : 'Đăng Nhập'}
+            {loading ? 'Đang xác thực...' : 'Đăng nhập'}
           </button>
         </form>
       </div>

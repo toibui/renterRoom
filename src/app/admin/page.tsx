@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
         fetch('/api/admin/invoices'),
       ]);
       const [roomsData, invoicesData] = await Promise.all([roomsResponse.json(), invoicesResponse.json()]);
-      if (!roomsResponse.ok || !invoicesResponse.ok) throw new Error('Không thể tải dữ liệu dashboard.');
+      if (!roomsResponse.ok || !invoicesResponse.ok) throw new Error('Không thể tải dữ liệu tổng quan.');
 
       const loadedRooms = roomsData.rooms || [];
       const loadedInvoices = invoicesData.invoices || [];
@@ -61,7 +61,7 @@ export default function AdminDashboardPage() {
       const preferredMonth = months.includes(getCurrentMonth()) ? getCurrentMonth() : months[0] || getCurrentMonth();
       setSelectedMonth((current) => current && months.includes(current) ? current : preferredMonth);
     } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Không thể tải dữ liệu dashboard.');
+      setError(loadError instanceof Error ? loadError.message : 'Không thể tải dữ liệu tổng quan.');
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function AdminDashboardPage() {
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-cyan-600">Tổng quan vận hành</p>
-          <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Dashboard nhà trọ</h1>
+          <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-900">Tổng quan nhà trọ</h1>
           <p className="mt-1 text-sm text-slate-500">Theo dõi chốt điện nước và mở nhanh hóa đơn từng phòng.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -107,8 +107,8 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={loadDashboard}
-            aria-label="Tải lại dashboard"
-            title="Tải lại dashboard"
+            aria-label="Tải lại dữ liệu"
+            title="Tải lại dữ liệu"
             className="rounded-xl border border-slate-200 bg-white p-2 text-slate-500 shadow-sm transition hover:border-cyan-300 hover:text-cyan-600"
           >
             <RefreshCw size={17} className={loading ? 'animate-spin' : ''} />
@@ -177,7 +177,7 @@ export default function AdminDashboardPage() {
                     </span>
                     {invoice ? (
                       <Link href={`/phong/${room.accessToken}?invoice=${invoice.id}`} target="_blank" className="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-700">
-                        <FileText size={14} /> Invoice <ArrowUpRight size={13} />
+                        <FileText size={14} /> Xem hóa đơn <ArrowUpRight size={13} />
                       </Link>
                     ) : (
                       <Link href={`/admin/electric-water?roomId=${room.id}&monthYear=${encodeURIComponent(selectedMonth)}`} className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-bold text-slate-600 transition hover:border-teal-300 hover:text-teal-700">Nhập số</Link>
@@ -192,7 +192,7 @@ export default function AdminDashboardPage() {
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Link href="/admin/rooms" className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-bold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700"><Home className="mx-auto mb-1 text-blue-600" size={18} />Quản lý phòng</Link>
-        <Link href="/admin/invoices" className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:text-indigo-700"><FileText className="mx-auto mb-1 text-indigo-600" size={18} />Tất cả invoice</Link>
+        <Link href="/admin/invoices" className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-bold text-slate-700 shadow-sm transition hover:border-indigo-300 hover:text-indigo-700"><FileText className="mx-auto mb-1 text-indigo-600" size={18} />Tất cả hóa đơn</Link>
         <Link href="/admin/property" className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-bold text-slate-700 shadow-sm transition hover:border-emerald-300 hover:text-emerald-700"><Home className="mx-auto mb-1 text-emerald-600" size={18} />Thông tin nhà</Link>
         <Link href="/admin/tenants" className="rounded-xl border border-slate-200 bg-white p-3 text-center text-xs font-bold text-slate-700 shadow-sm transition hover:border-amber-300 hover:text-amber-700"><FileText className="mx-auto mb-1 text-amber-600" size={18} />Nhân khẩu</Link>
       </section>

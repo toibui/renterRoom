@@ -24,7 +24,7 @@ export default function TenantsPage() {
     <div className="p-4 space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-xl font-bold text-slate-900">Quản Lý Nhân Khẩu</h1>
+          <h1 className="text-xl font-bold text-slate-900">Quản lý khách thuê</h1>
           <p className="text-xs text-slate-500">Khách thuê khai báo tạm trú</p>
         </div>
         <button onClick={handleExportExcel} className="bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-sm">

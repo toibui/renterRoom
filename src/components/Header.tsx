@@ -29,7 +29,7 @@ export default function Header() {
           </button>
         )}
         <Link href="/" className="font-extrabold text-base md:text-lg text-blue-400 tracking-tight">
-          RentalManager
+          Quản lý nhà trọ
         </Link>
       </div>
 
@@ -37,7 +37,7 @@ export default function Header() {
         {isAdmin ? (
           <div className="flex items-center gap-2">
             <span className="bg-emerald-500/20 text-emerald-400 px-2.5 py-1 rounded-full font-semibold border border-emerald-500/30">
-              Admin
+              Quản trị viên
             </span>
             {pathname !== '/admin/login' && (
               <button
@@ -53,7 +53,7 @@ export default function Header() {
             href="/admin"
             className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-lg border border-slate-700 transition"
           >
-            Admin 🔒
+            Quản trị 🔒
           </Link>
         )}
       </div>

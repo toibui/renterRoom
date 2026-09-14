@@ -26,8 +26,8 @@ export default function InvoicesPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Quản Lý Hóa Đơn</h1>
-        <p className="text-xs text-slate-500">Xác nhận thu tiền hóa đơn 1-chạm</p>
+        <h1 className="text-xl font-bold text-slate-900">Quản lý hóa đơn</h1>
+        <p className="text-xs text-slate-500">Xác nhận thu tiền hóa đơn chỉ với một chạm</p>
       </div>
 
       <div className="space-y-3">

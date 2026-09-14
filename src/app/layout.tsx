@@ -4,7 +4,7 @@ import BottomNav from '@/components/BottomNav';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Rental Manager Mobile',
+  title: 'Quản lý nhà trọ',
   description: 'Quản lý nhà trọ tiện lợi trên thiết bị di động',
 };
 

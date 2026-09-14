@@ -10,10 +10,10 @@ export default function BottomNav() {
   const navItems = [
     { label: 'Tổng quan', href: '/admin', icon: '🏠' },
     { label: 'Phòng', href: '/admin/rooms', icon: '🔑' },
-    { label: 'Điện Nước', href: '/admin/electric-water', icon: '⚡' },
-    { label: 'Hóa Đơn', href: '/admin/invoices', icon: '📄' },
-    { label: 'Nhân Khẩu', href: '/admin/tenants', icon: '👥' },
-    { label: 'Nhà Trọ', href: '/admin/property', icon: '🏡' },
+    { label: 'Điện nước', href: '/admin/electric-water', icon: '⚡' },
+    { label: 'Hóa đơn', href: '/admin/invoices', icon: '📄' },
+    { label: 'Khách thuê', href: '/admin/tenants', icon: '👥' },
+    { label: 'Nhà trọ', href: '/admin/property', icon: '🏡' },
   ];
 
   return (

@@ -47,12 +47,12 @@ export default function AssetsPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Quản Lý Tài Sản</h1>
+        <h1 className="text-xl font-bold text-slate-900">Quản lý tài sản</h1>
         <p className="text-xs text-slate-500">Kiểm kê thiết bị đồ đạc các phòng</p>
       </div>
 
       <form onSubmit={handleCreate} className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-        <h2 className="text-sm font-bold text-slate-800">Thêm Đồ Đạc</h2>
+        <h2 className="text-sm font-bold text-slate-800">Thêm tài sản</h2>
         <div className="space-y-2">
           <select value={roomId} onChange={(e) => setRoomId(e.target.value)} className="w-full border p-2.5 rounded-xl text-sm bg-white" required>
             <option value="">-- Chọn phòng --</option>
@@ -68,7 +68,7 @@ export default function AssetsPage() {
             </select>
           </div>
         </div>
-        <button type="submit" className="w-full bg-amber-600 text-white py-2.5 rounded-xl text-sm font-bold">Thêm Tài Sản</button>
+        <button type="submit" className="w-full bg-amber-600 text-white py-2.5 rounded-xl text-sm font-bold">Thêm tài sản</button>
       </form>
 
       <div className="space-y-2">

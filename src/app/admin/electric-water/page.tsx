@@ -184,7 +184,7 @@ export default function ElectricWaterPage() {
   return (
     <div className="p-4 space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">Chốt Điện Nước</h1>
+        <h1 className="text-xl font-bold text-slate-900">Chốt điện nước</h1>
         <p className="text-xs text-slate-500">Tự động lấy chỉ số cũ & tính tổng tiền</p>
       </div>
 
