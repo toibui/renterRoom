@@ -50,6 +50,23 @@ export default function ElectricWaterPage() {
           oldWater: 0,
           newWater: 0,
         })));
+
+        const params = new URLSearchParams(window.location.search);
+        const roomIdFromUrl = params.get('roomId');
+        const monthYearFromUrl = params.get('monthYear');
+        const selectedRoom = loadedRooms.find((room: any) => room.id === roomIdFromUrl);
+        if (monthYearFromUrl) setMonthYear(monthYearFromUrl);
+        if (selectedRoom) {
+          setSelectedRoomId(selectedRoom.id);
+          fetch(`/api/admin/electric-water/latest?roomId=${selectedRoom.id}`)
+            .then((response) => response.json())
+            .then((latestData) => {
+              setOldElectric(latestData.oldElectric || 0);
+              setNewElectric(latestData.oldElectric || 0);
+              setOldWater(latestData.oldWater || 0);
+              setNewWater(latestData.oldWater || 0);
+            });
+        }
       });
   }, []);
 
